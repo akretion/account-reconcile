@@ -7,7 +7,7 @@
         <record id="file_document_view_form" model="ir.ui.view">
             <field name="name">bank_statement_repository.file_document.view_form</field>
             <field name="model">file.document</field>
-            <field name="inherit_id" ref="file_repository.file_document_view_form" />
+            <field name="inherit_id" ref="file_document.file_document_view_form" />
             <field name="arch" type="xml">
                 <data>
                     <field name="file_type" position="after">
