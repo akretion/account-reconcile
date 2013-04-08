@@ -20,6 +20,5 @@
 #
 ###############################################################################
 
-import file_document
 import abstract_task
 import file_repository

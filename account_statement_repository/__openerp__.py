@@ -32,11 +32,10 @@
     'author': 'Akretion',
     'website': 'http://www.akretion.com/',
     'depends': ['file_repository',
-                'account_statement_base_import',
+                'account_statement_file_document',
                 ],
     'demo': [],
     'data': [
-           'file_document_view.xml',
            'file_repository_view.xml',
     ],
     'installable': True,
