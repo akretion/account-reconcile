@@ -35,7 +35,7 @@ class FileParser(BankStatementImportParser):
     """
 
     def __init__(self, parse_name, keys_to_validate=None, ftype='csv', conversion_dict=None,
-                 header=None, *args, **kwargs):
+                 header=None, dialect=None, *args, **kwargs):
         """
             :param char: parse_name : The name of the parser
             :param list: keys_to_validate : contain the key that need to be present in the file
@@ -57,12 +57,13 @@ class FileParser(BankStatementImportParser):
         else:
             raise except_osv(_('User Error'),
                              _('Invalid file type %s. Please use csv or xls') % ftype)
-        self.keys_to_validate = keys_to_validate if keys_to_validate is not None else [] 
+        self.keys_to_validate = keys_to_validate if keys_to_validate is not None else []
         self.conversion_dict = conversion_dict
         self.fieldnames = header
         self._datemode = 0  # used only for xls documents,
                             # 0 means Windows mode (1900 based dates).
                             # Set in _parse_xls, from the contents of the file
+        self.dialect = dialect
 
     def _custom_format(self, *args, **kwargs):
         """
@@ -97,7 +98,7 @@ class FileParser(BankStatementImportParser):
         We skip the validation step if the file header is provided separately
         (in the field: fieldnames).
         """
-        if self.fieldnames is None:
+        if self.fieldnames is None and self.keys_to_validate:
             parsed_cols = self.result_row_list[0].keys()
             for col in self.keys_to_validate:
                 if col not in parsed_cols:
@@ -120,7 +121,8 @@ class FileParser(BankStatementImportParser):
         csv_file.write(self.filebuffer)
         csv_file.flush()
         with open(csv_file.name, 'rU') as fobj:
-            reader = UnicodeDictReader(fobj, fieldnames=self.fieldnames)
+            reader = UnicodeDictReader(fobj, fieldnames=self.fieldnames,
+                                       dialect=self.dialect)
             return list(reader)
 
     def _parse_xls(self):
@@ -147,31 +149,47 @@ class FileParser(BankStatementImportParser):
         """
         for line in result_set:
             for rule in conversion_rules:
-                if conversion_rules[rule] == datetime.datetime:
-                    try:
+                if type(conversion_rules[rule]) == dict:
+                    if conversion_rules[rule]['type'] == datetime.datetime:
+                        line[rule] = datetime.datetime.strptime(line[rule],
+                                        conversion_rules[rule]['format'])
+                else:
+                    if conversion_rules[rule] == datetime.datetime:
                         date_string = line[rule].split(' ')[0]
                         line[rule] = datetime.datetime.strptime(date_string,
                                                                 '%Y-%m-%d')
-                    except ValueError as err:
-                        raise except_osv(_("Date format is not valid."),
-                                         _(" It should be YYYY-MM-DD for column: %s"
-                                           " value: %s \n \n"
-                                           " \n Please check the line with ref: %s"
-                                           " \n \n Detail: %s") % (rule,
-                                                                   line.get(rule, _('Missing')),
-                                                                   line.get('ref', line),
-                                                                   repr(err)))
-                else:
-                    try:
+                    else:
+                        if conversion_rules[rule] == float:
+                            if not line[rule]:
+                                line[rule] = u'0.00'
+                            line[rule] = line[rule].replace(',', '.').replace(' ', '')
+
                         line[rule] = conversion_rules[rule](line[rule])
-                    except Exception as err:
-                        raise except_osv(_('Invalid data'),
-                                         _("Value %s of column %s is not valid."
-                                           "\n Please check the line with ref %s:"
-                                           "\n \n Detail: %s") % (line.get(rule, _('Missing')),
-                                                                  rule,
-                                                                  line.get('ref', line),
-                                                                  repr(err)))
+                #if conversion_rules[rule] == datetime.datetime:
+                #    try:
+                #        date_string = line[rule].split(' ')[0]
+                #        line[rule] = datetime.datetime.strptime(date_string,
+                #                                                '%Y-%m-%d')
+                #    except ValueError as err:
+                #        raise except_osv(_("Date format is not valid."),
+                #                         _(" It should be YYYY-MM-DD for column: %s"
+                #                           " value: %s \n \n"
+                #                           " \n Please check the line with ref: %s"
+                #                           " \n \n Detail: %s") % (rule,
+                #                                                   line.get(rule, _('Missing')),
+                #                                                   line.get('ref', line),
+                #                                                   repr(err)))
+                #else:
+                #    try:
+                #        line[rule] = conversion_rules[rule](line[rule])
+                #    except Exception as err:
+                #        raise except_osv(_('Invalid data'),
+                #                         _("Value %s of column %s is not valid."
+                #                           "\n Please check the line with ref %s:"
+                #                           "\n \n Detail: %s") % (line.get(rule, _('Missing')),
+                #                                                  rule,
+                #                                                  line.get('ref', line),
+                #                                                  repr(err)))
         return result_set
 
     def _from_xls(self, result_set, conversion_rules):

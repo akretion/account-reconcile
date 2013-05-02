@@ -119,7 +119,7 @@ class AccountStatementCompletionRule(orm.Model):
     _name = "account.statement.completion.rule"
     _order = "sequence asc"
 
-    def _get_functions(self, cr, uid, context=None):
+    def get_functions(self, cr, uid, context=None):
         """
         List of available methods for rules. Override this to add you own.
         """
@@ -129,6 +129,12 @@ class AccountStatementCompletionRule(orm.Model):
             ('get_from_ref_and_so', 'From line reference (based on SO number)'),
             ('get_from_label_and_partner_field', 'From line label (based on partner field)'),
             ('get_from_label_and_partner_name', 'From line label (based on partner name)')]
+
+    def _get_functions(self, cr, uid, context=None):
+        """
+        Call method which can be inherited
+        """
+        return self.get_functions(cr, uid, context=context)
 
     _columns = {
         'sequence': fields.integer('Sequence', help="Lower means parsed first."),

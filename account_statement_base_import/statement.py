@@ -28,6 +28,7 @@ import datetime
 from openerp.osv.orm import Model
 from openerp.osv import fields, osv
 from parser import new_bank_statement_parser
+from openerp.tools.config import config
 
 
 class AccountStatementProfil(Model):
@@ -39,6 +40,12 @@ class AccountStatementProfil(Model):
         """
         return [('generic_csvxls_so', 'Generic .csv/.xls based on SO Name')]
 
+    def _get_import_type_selection(self, cr, uid, context=None):
+        """
+        Call method which can be inherited
+        """
+        return self.get_import_type_selection(cr, uid, context=context)
+
     _columns = {
         'launch_import_completion': fields.boolean(
             "Launch completion after import",
@@ -48,7 +55,7 @@ class AccountStatementProfil(Model):
         #  we remove deprecated as it floods logs in standard/warning level sob...
         'rec_log': fields.text('log', readonly=True),  # Deprecated
         'import_type': fields.selection(
-            get_import_type_selection,
+            _get_import_type_selection,
             'Type of import',
             required=True,
             help="Choose here the method by which you want to import bank"
@@ -107,7 +114,7 @@ class AccountStatementProfil(Model):
             }
         return comm_values
 
-    def prepare_statetement_lines_vals(
+    def prepare_statement_lines_vals(
             self, cr, uid, parser_vals, account_payable, account_receivable,
             statement_id, context):
         """
@@ -239,10 +246,12 @@ class AccountStatementProfil(Model):
                                          context)
 
         except Exception:
-            statement_obj.unlink(cr, uid, [statement_id], context=context)
+            #statement_obj.unlink(cr, uid, [statement_id], context=context)
             error_type, error_value, trbk = sys.exc_info()
             st = "Error: %s\nDescription: %s\nTraceback:" % (error_type.__name__, error_value)
             st += ''.join(traceback.format_tb(trbk, 30))
+            if config['debug_mode']:
+                raise
             raise osv.except_osv(_("Statement import error"),
                                  _("The statement cannot be created: %s") % st)
         return statement_id
