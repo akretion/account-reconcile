@@ -59,6 +59,7 @@ class BankStatementImportParser(object):
         self.balance_start = None
         self.balance_end = None
         self.statement_date = None
+        self.statement_name = None
 
     @classmethod
     def parser_for(cls, parser_name):
@@ -195,6 +196,14 @@ class BankStatementImportParser(object):
             return: float of the balance start (self.balance_start)
         """
         return self.statement_date or datetime.now()
+
+    def get_statement_name(self, *args, **kwargs):
+        """
+        This is called by the importation method to set the statement
+        date in the bank statement.
+            return: float of the balance start (self.balance_start)
+        """
+        return self.statement_name or '/'
 
 
 

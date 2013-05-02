@@ -269,7 +269,7 @@ class AccountBankStatement(Model):
                   create the move from.
            :return: int/long of the res.partner to use as counterpart
         """
-        bank_partner_id = super(AccountBankSatement, self)._get_counter_part_partner(cr,
+        bank_partner_id = super(AccountBankStatement, self)._get_counter_part_partner(cr,
                                                                                      uid,
                                                                                      st_line,
                                                                                      context=context)
@@ -650,7 +650,7 @@ class AccountBankStatementLine(Model):
         Keep the same features as in standard and call super. If an account is returned,
         call the method to compute line values.
         """
-        res = super(AccountBankSatementLine, self).onchange_type(cr, uid,
+        res = super(AccountBankStatementLine, self).onchange_type(cr, uid,
                                                                  line_id,
                                                                  partner_id,
                                                                  line_type,
