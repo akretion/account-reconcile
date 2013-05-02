@@ -400,7 +400,7 @@ class AccountStatementLine(orm.Model):
     module to see how we've done it.
     """
     _inherit = "account.bank.statement.line"
-    _order = "already_completed asc, date asc"
+    _order = "already_completed desc, date asc"
 
     _columns = {
         'additionnal_bank_fields': fields.serialized(
