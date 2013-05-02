@@ -207,7 +207,7 @@ class AccountStatementProfil(Model):
             statement_store = []
             for line in result_row_list:
                 parser_vals = parser.get_st_line_vals(line)
-                values = self.prepare_statetement_lines_vals(cr, uid, parser_vals, account_payable,
+                values = self.prepare_statement_lines_vals(cr, uid, parser_vals, account_payable,
                                                              account_receivable, statement_id, context)
                 statement_store.append(values)
             # Hack to bypass ORM poor perfomance. Sob...
