@@ -37,6 +37,12 @@
                  <xpath expr="/form/sheet/notebook/page/field[@name='line_ids']/form/group/field[@name='label']" position="after">
                      <field name="commission_amount" />
                  </xpath>
+                 <xpath expr="/form/sheet/notebook/page/field[@name='line_ids']/form/group/field[@name='account_id']" position="attributes">
+                     <attribute name="attrs">{'required': [('already_completed','=', True)]}</attribute>
+                 </xpath>
+                 <xpath expr="/form/sheet/notebook/page/field[@name='line_ids']/tree/field[@name='account_id']" position="attributes">
+                     <attribute name="attrs">{'required': [('already_completed','=', True)]}</attribute>
+                 </xpath>
              </data>
          </field>
      </record>
