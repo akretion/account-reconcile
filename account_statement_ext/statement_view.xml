@@ -16,6 +16,7 @@
                 <field name="commission_account_id" />
                 <field name="commission_analytic_id" />
                 <field name="receivable_account_id" />
+                <field name="internal_account_transfer_id"/>
                 <field name="force_partner_on_bank"/>
                 <field name="balance_check"/>
                 <field name="bank_statement_prefix"/>
