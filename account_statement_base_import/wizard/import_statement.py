@@ -118,5 +118,5 @@ class CreditPartnerStatementImporter(orm.TransientModel):
         action_obj = self.pool.get('ir.actions.act_window')
         action_id = model_obj.get_object_reference(cr, uid, 'account', 'action_bank_statement_tree')[1]
         res = action_obj.read(cr, uid, action_id)
-        res['domain'] = res['domain'][:-1] + ",('id', '=', %d)]" % sid
+        res['domain'] = res['domain'][:-1] + ",('id', 'in', %s)]" % sid
         return res
