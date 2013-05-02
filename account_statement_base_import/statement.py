@@ -132,12 +132,6 @@ class AccountStatementProfil(Model):
         statement_obj = self.pool.get('account.bank.statement')
         values = parser_vals
         values['statement_id'] = statement_id
-        values['account_id'] = statement_obj.get_account_for_counterpart(cr,
-                                                                         uid,
-                                                                         parser_vals['amount'],
-                                                                         account_receivable,
-                                                                         account_payable)
-
         date = values.get('date')
         period_memoizer = context.get('period_memoizer')
         if not period_memoizer:
@@ -312,4 +306,6 @@ class AccountStatementLine(Model):
             type='float',
             string='Line Commission Amount',
             serialization_field='additionnal_bank_fields'),
+        'account_id': fields.many2one('account.account','Account'),
+ 
     }
