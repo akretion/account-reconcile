@@ -162,7 +162,8 @@ class FileParser(BankStatementImportParser):
                         if conversion_rules[rule] == float:
                             if not line[rule]:
                                 line[rule] = u'0.00'
-                            line[rule] = line[rule].replace(',', '.').replace(' ', '')
+                            if type(line[rule]) in ['unicode', 'str']:
+                                line[rule] = line[rule].replace(',', '.').replace(' ', '')
 
                         line[rule] = conversion_rules[rule](line[rule])
                 #if conversion_rules[rule] == datetime.datetime:
