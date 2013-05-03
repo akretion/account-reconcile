@@ -170,22 +170,25 @@ class AccountStatementProfil(Model):
             raise osv.except_osv(_("No Profile!"),
                                  _("You must provide a valid profile to import a bank statement!"))
         prof = prof_obj.browse(cr, uid, profile_id, context=context)
-
+        context['profile'] = prof
         parser = new_bank_statement_parser(prof.import_type, ftype=ftype)
         result_row_list = parser.parse(file_stream, context=context)
         # Check all key are present in account.bank.statement.line!!
         if not result_row_list:
             raise osv.except_osv(_("Nothing to import"),
                                  _("The file is empty"))
-        parsed_cols = parser.get_st_line_vals(result_row_list[0]).keys()
+        parsed_cols = parser.get_st_line_vals(result_row_list[0], context=context).keys()
         for col in parsed_cols:
             if col not in statement_line_obj._columns:
                 raise osv.except_osv(_("Missing column!"),
                                      _("Column %s you try to import is not "
                                        "present in the bank statement line!") % col)
+        st_name = parser.get_statement_name()
+        if st_name != '/':
+            st_name = '%s%s'%(prof.bank_statement_prefix, st_name)
         st_vals = {
             'profile_id': prof.id,
-            'name': parser.get_statement_name(),
+            'name': st_name,
             'balance_start': parser.get_start_balance(),
             'balance_end_real': parser.get_end_balance(),
         }
@@ -201,7 +204,7 @@ class AccountStatementProfil(Model):
             # based on the commission_amount column
             statement_store = []
             for line in result_row_list:
-                parser_vals = parser.get_st_line_vals(line)
+                parser_vals = parser.get_st_line_vals(line, context=context)
                 values = self.prepare_statement_lines_vals(cr, uid, parser_vals, account_payable,
                                                              account_receivable, statement_id, context)
                 statement_store.append(values)
