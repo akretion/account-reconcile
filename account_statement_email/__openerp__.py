@@ -28,7 +28,7 @@
     'description': """empty""",
     'author': 'Akretion',
     'website': 'http://www.akretion.com/',
-    'depends': ['account_statement_file_document'], 
+    'depends': ['account_statement_file_document', 'file_email'], 
     'init_xml': [],
     'update_xml': [ 
            'fetchmail_view.xml',
