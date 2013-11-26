@@ -33,7 +33,7 @@ class file_document(orm.Model):
         return res
 
     _columns = {
-        'statement_profile_id': fields.many2one('account.statement.profile',
+        'profile_id': fields.many2one('account.statement.profile',
                                                 string='Account Statement Profile')
     }
 

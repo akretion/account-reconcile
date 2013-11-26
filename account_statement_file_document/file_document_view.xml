@@ -11,7 +11,7 @@
             <field name="arch" type="xml">
                 <data>
                     <field name="file_type" position="after">
-                        <field name="statement_profile_id"
+                        <field name="profile_id"
                                attrs="{'invisible':[('file_type', '!=', 'bank_statement')],
                                        'required':[('file_type', '=', 'bank_statement')]}"/>
                     </field>

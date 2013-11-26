@@ -39,7 +39,7 @@ class fetchmail_server(orm.Model):
         ctx = super(fetchmail_server, self).get_context_for_server(cr, uid, server_id, context=context)
         if server.file_type == 'bank_statement':
             ctx['default_file_document_vals'] = {
-                    'statement_profile_id': server.statement_profile_id.id,
+                    'profile_id': server.profile_id.id,
                     'file_type': 'bank_statement',
                     }
         return ctx
