@@ -42,12 +42,12 @@ class file_document(orm.Model):
         acc_profile_obj = self.pool['account.statement.profile']
         attach_obj = self.pool['ir.attachment']
         if filedocument.file_type == 'bank_statement':
-            (shortname, ftype) = os.path.splitext(filedocument.name)
+            (shortname, ftype) = os.path.splitext(filedocument.datas_fname)
             acc_profile_obj.statement_import(
                                             cr,
                                             uid,
                                             False,
-                                            filedocument.statement_profile_id.id,
+                                            filedocument.profile_id.id,
                                             filedocument.datas,
                                             ftype.replace('.', ''),
                                             context=context
