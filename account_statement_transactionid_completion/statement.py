@@ -85,10 +85,8 @@ class AccountStatementLine(Model):
 
     _columns = {
         # 'additionnal_bank_fields' : fields.serialized('Additionnal infos from bank', help="Used by completion and import system."),
-        'transaction_id': fields.sparse(
-            type='char',
+        'transaction_id': fields.char(
             string='Transaction ID',
             size=128,
-            serialization_field='additionnal_bank_fields',
             help="Transction id from the financial institute"),
     }
