@@ -31,7 +31,8 @@
     'depends': ['account_statement_base_import','file_document'], 
     'init_xml': [],
     'update_xml': [ 
-           'file_document_view.xml',
+        'file_document_view.xml',
+        'statement_view.xml',
     ],
     'demo_xml': [],
     'installable': True,

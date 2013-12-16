@@ -41,6 +41,8 @@ class file_document(orm.Model):
         return False
 
     def _run(self, cr, uid, filedocument, context=None):
+        if context is None:
+            context = {}
         super(file_document, self)._run(cr, uid, filedocument, context=context)
         acc_profile_obj = self.pool['account.statement.profile']
         attach_obj = self.pool['ir.attachment']
@@ -48,6 +50,8 @@ class file_document(orm.Model):
             #TODO think how it will be the best to manage it
             if not self.is_empty(cr, uid, filedocument, context=context):
                 (shortname, ftype) = os.path.splitext(filedocument.datas_fname)
+                ctx = context.copy()
+                ctx['default_file_id'] = filedocument.id
                 acc_profile_obj.statement_import(
                                             cr,
                                             uid,
@@ -55,5 +59,5 @@ class file_document(orm.Model):
                                             filedocument.profile_id.id,
                                             filedocument.datas,
                                             ftype.replace('.', ''),
-                                            context=context
+                                            context=ctx,
                                         )

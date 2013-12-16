@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 ###############################################################################
 #
-#   account_statement_file_document for OpenERP
-#   Copyright (C) 2012-TODAY Akretion <http://www.akretion.com>.
+#   Module for OpenERP 
+#   Copyright (C) 2013 Akretion (http://www.akretion.com).
 #   @author Sébastien BEAU <sebastien.beau@akretion.com>
 #
 #   This program is free software: you can redistribute it and/or modify
@@ -20,5 +20,23 @@
 #
 ###############################################################################
 
-import file_document
-import statement
+
+from openerp.osv import fields, orm
+
+class account_bank_statement(orm.Model):
+    _inherit = "account.bank.statement"
+
+    _columns = {
+        'file_id': fields.many2one('file.document', string='File Document', readonly=True)
+    }
+ 
+class AccountStatementProfil(orm.Model):
+    _inherit = "account.statement.profile"
+      
+    def _attach_file_stream(self, cr, uid, statement_id, file_stream, ftype, context=None):
+        if context.get('default_file_id'):
+            return True
+        else:
+            return super(account_bank_statement, self)._attach_file_stream(cr,
+                    uid, statement_id, file_stream, ftype, context=context)  
+

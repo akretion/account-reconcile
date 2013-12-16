@@ -177,6 +177,16 @@ class AccountStatementProfil(Model):
         if transfer_vals:
             statement_line_obj.create(cursor, uid, transfer_vals, context=context)
 
+    def _attach_file_stream(self, cr, uid, statement_id, file_stream, ftype, context=None):
+        attachment_obj = self.pool.get('ir.attachment')
+        return attachment_obj.create(cr, uid, {
+                'name': 'statement file',
+                'datas': file_stream,
+                'datas_fname': "%s.%s"%(datetime.datetime.now().date(), ftype),
+                'res_model': 'account.bank.statement',
+                'res_id': statement_id,
+            }, context=context
+        )
 
     def statement_import(self, cr, uid, ids, profile_id, file_stream, ftype="csv", context=None):
         """
@@ -257,16 +267,8 @@ class AccountStatementProfil(Model):
                 statement_obj.write(cr, uid, [statement_id],
                                     {'balance_start': start_bal})
 
-            attachment_obj.create(cr,
-                                  uid,
-                                  {'name': 'statement file',
-                                   'datas': file_stream,
-                                   'datas_fname': "%s.%s" % (
-                                       datetime.datetime.now().date(),
-                                       ftype),
-                                   'res_model': 'account.bank.statement',
-                                   'res_id': statement_id},
-                                  context=context)
+            self._attach_file_stream(cr, uid, statement_id, file_stream,
+                                     ftype, context=context)
 
             # If user ask to launch completion at end of import, do it!
             if prof.launch_import_completion:
