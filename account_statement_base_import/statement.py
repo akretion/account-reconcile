@@ -149,6 +149,35 @@ class AccountStatementProfil(Model):
         values['type'] = 'general'
         return values
 
+    def prepare_tranfer_line_vals(self, cursor, uid, parser, result_row_list,
+                                        profile, statement_id, context=None):
+        if parser.get_transfer_amount():
+            partner_id = profile.partner_id and profile.partner_id.id or False
+            transfer_account_id = profile.internal_account_transfer_id.id or False
+            statement_line_obj = self.pool.get('account.bank.statement.line')
+            return {
+                'name': _('Transfer'),
+                'date': parser.get_statement_date(),
+                'amount': parser.get_transfer_amount(),
+                'partner_id': partner_id,
+                'type': 'general',
+                'statement_id': statement_id,
+                'account_id': transfer_account_id,
+                'ref': 'transfer',
+                # !! We set the already_completed so auto-completion will not update those values !
+                'already_completed': True,
+            }
+
+
+
+    def _add_special_line(self, cursor, uid, statement_id, parser, result_row_list, prof, context=None):
+        statement_line_obj = self.pool.get('account.bank.statement.line')
+        # Build and create the global commission line for the whole statement
+        transfer_vals = self.prepare_tranfer_line_vals(cursor, uid, parser, result_row_list, prof, statement_id, context)
+        if transfer_vals:
+            statement_line_obj.create(cursor, uid, transfer_vals, context=context)
+
+
     def statement_import(self, cr, uid, ids, profile_id, file_stream, ftype="csv", context=None):
         """
         Create a bank statement with the given profile and parser. It will fullfill the bank statement
@@ -189,6 +218,7 @@ class AccountStatementProfil(Model):
         st_vals = {
             'profile_id': prof.id,
             'name': st_name,
+            'date': parser.get_statement_date(),
             'balance_start': parser.get_start_balance(),
             'balance_end_real': parser.get_end_balance(),
         }
@@ -211,6 +241,8 @@ class AccountStatementProfil(Model):
             # Hack to bypass ORM poor perfomance. Sob...
             statement_line_obj._insert_lines(cr, uid, statement_store, context=context)
 
+
+            self._add_special_line(cr, uid, statement_id, parser, result_row_list, prof, context=context)
             # Build and create the global commission line for the whole statement
             comm_vals = self.prepare_global_commission_line_vals(cr, uid, parser, result_row_list,
                                                                  prof, statement_id, context)
