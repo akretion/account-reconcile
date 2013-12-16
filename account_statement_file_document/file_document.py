@@ -37,13 +37,18 @@ class file_document(orm.Model):
                                                 string='Account Statement Profile')
     }
 
+    def is_empty(self, cr, uid, filedocument, context=None):
+        return False
+
     def _run(self, cr, uid, filedocument, context=None):
         super(file_document, self)._run(cr, uid, filedocument, context=context)
         acc_profile_obj = self.pool['account.statement.profile']
         attach_obj = self.pool['ir.attachment']
         if filedocument.file_type == 'bank_statement':
-            (shortname, ftype) = os.path.splitext(filedocument.datas_fname)
-            acc_profile_obj.statement_import(
+            #TODO think how it will be the best to manage it
+            if not self.is_empty(cr, uid, filedocument, context=context):
+                (shortname, ftype) = os.path.splitext(filedocument.datas_fname)
+                acc_profile_obj.statement_import(
                                             cr,
                                             uid,
                                             False,
