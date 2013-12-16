@@ -20,8 +20,8 @@
 #
 ###############################################################################
 
-
 from openerp.osv import fields, orm
+
 
 class account_bank_statement(orm.Model):
     _inherit = "account.bank.statement"
@@ -29,14 +29,15 @@ class account_bank_statement(orm.Model):
     _columns = {
         'file_id': fields.many2one('file.document', string='File Document', readonly=True)
     }
- 
-class AccountStatementProfil(orm.Model):
+
+
+class account_statement_profil(orm.Model):
     _inherit = "account.statement.profile"
       
     def _attach_file_stream(self, cr, uid, statement_id, file_stream, ftype, context=None):
         if context.get('default_file_id'):
             return True
         else:
-            return super(account_bank_statement, self)._attach_file_stream(cr,
+            return super(account_statement_profil, self)._attach_file_stream(cr,
                     uid, statement_id, file_stream, ftype, context=context)  
 
