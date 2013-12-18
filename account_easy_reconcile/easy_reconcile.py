@@ -191,6 +191,11 @@ class account_easy_reconcile(orm.Model):
         'company_id': fields.many2one('res.company', 'Company'),
     }
 
+    _default = {
+        'company_id': lambda s,cr,uid,c: s.pool.get('res.company').\
+            _company_default_get(cr, uid, 'prestashop.backend', context=c),
+    }
+
     def _prepare_run_transient(self, cr, uid, rec_method, context=None):
         return {'account_id': rec_method.task_id.account.id,
                 'write_off': rec_method.write_off,
