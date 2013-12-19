@@ -137,7 +137,9 @@ class account_easy_reconcile(orm.Model):
         for task in self.browse(cr, uid, ids, context=context):
             res[task.id] = len(obj_move_line.search(
                 cr, uid,
-                [('account_id', '=', task.account.id),
+                ['|', 
+                 ('account_id', '=', task.account.id),
+                 ('account_id', 'in', [child.id for child in task.account.child_parent_ids]),
                  ('reconcile_id', '=', False),
                  ('reconcile_partial_id', '=', False)],
                 context=context))
@@ -196,8 +198,8 @@ class account_easy_reconcile(orm.Model):
             _company_default_get(cr, uid, 'prestashop.backend', context=c),
     }
 
-    def _prepare_run_transient(self, cr, uid, rec_method, context=None):
-        return {'account_id': rec_method.task_id.account.id,
+    def _prepare_run_transient(self, cr, uid, rec_method, account_id, context=None):
+        return {'account_id': account_id,
                 'write_off': rec_method.write_off,
                 'account_lost_id': (rec_method.account_lost_id and
                                     rec_method.account_lost_id.id),
@@ -225,15 +227,20 @@ class account_easy_reconcile(orm.Model):
             all_ml_partial_ids = []
 
             for method in rec.reconcile_method:
-                rec_model = self.pool.get(method.name)
-                auto_rec_id = rec_model.create(
-                    cr, uid,
-                    self._prepare_run_transient(
-                        cr, uid, method, context=context),
-                    context=context)
+                if method.task_id.account.type == 'view':
+                    account_ids = [child.id for child in method.task_id.account.child_parent_ids]
+                else:
+                    account_ids = [account.id]
+                for account_id in account_ids:
+                    rec_model = self.pool.get(method.name)
+                    auto_rec_id = rec_model.create(
+                        cr, uid,
+                        self._prepare_run_transient(
+                            cr, uid, method, account_id, context=context),
+                        context=context)
 
-                ml_rec_ids, ml_partial_ids = rec_model.automatic_reconcile(
-                    cr, uid, auto_rec_id, context=context)
+                    ml_rec_ids, ml_partial_ids = rec_model.automatic_reconcile(
+                        cr, uid, auto_rec_id, context=context)
 
                 all_ml_rec_ids += ml_rec_ids
                 all_ml_partial_ids += ml_partial_ids
