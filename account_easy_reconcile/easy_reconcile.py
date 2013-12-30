@@ -195,7 +195,7 @@ class account_easy_reconcile(orm.Model):
 
     _default = {
         'company_id': lambda s,cr,uid,c: s.pool.get('res.company').\
-            _company_default_get(cr, uid, 'prestashop.backend', context=c),
+            _company_default_get(cr, uid, 'account.easy.reconcile', context=c),
     }
 
     def _prepare_run_transient(self, cr, uid, rec_method, account_id, context=None):
@@ -230,7 +230,7 @@ class account_easy_reconcile(orm.Model):
                 if method.task_id.account.type == 'view':
                     account_ids = [child.id for child in method.task_id.account.child_parent_ids]
                 else:
-                    account_ids = [account.id]
+                    account_ids = [method.task_id.account.id]
                 for account_id in account_ids:
                     rec_model = self.pool.get(method.name)
                     auto_rec_id = rec_model.create(
