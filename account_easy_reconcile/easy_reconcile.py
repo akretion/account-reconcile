@@ -193,7 +193,7 @@ class account_easy_reconcile(orm.Model):
         'company_id': fields.many2one('res.company', 'Company'),
     }
 
-    _default = {
+    _defaults = {
         'company_id': lambda s,cr,uid,c: s.pool.get('res.company').\
             _company_default_get(cr, uid, 'account.easy.reconcile', context=c),
     }
