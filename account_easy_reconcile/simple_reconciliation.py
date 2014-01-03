@@ -20,6 +20,8 @@
 ##############################################################################
 
 from openerp.osv.orm import AbstractModel, TransientModel
+from datetime import datetime, timedelta
+from tools import DEFAULT_SERVER_DATE_FORMAT
 
 
 class easy_reconcile_simple(AbstractModel):
@@ -30,6 +32,9 @@ class easy_reconcile_simple(AbstractModel):
     # has to be subclassed
     # field name used as key for matching the move lines
     _key_field = None
+
+    def _is_finish(self, line, next_line, context=None):
+        return line[self._key_field] != next_line[self._key_field]
 
     def rec_auto_lines_simple(self, cr, uid, rec, lines, context=None):
         if context is None:
@@ -43,7 +48,7 @@ class easy_reconcile_simple(AbstractModel):
         while (count < len(lines)):
             for i in xrange(count+1, len(lines)):
                 writeoff_account_id = False
-                if lines[count][self._key_field] != lines[i][self._key_field]:
+                if self._is_finish(lines[count], lines[i], context=context):
                     break
 
                 check = False
@@ -118,3 +123,19 @@ class easy_reconcile_simple_reference(TransientModel):
     # has to be subclassed
     # field name used as key for matching the move lines
     _key_field = 'ref'
+
+
+class easy_reconcile_simple_date(TransientModel):
+    _name = 'easy.reconcile.simple.date'
+    _inherit = 'easy.reconcile.simple'
+    _auto = True  # False when inherited from AbstractModel
+
+    # has to be subclassed
+    # field name used as key for matching the move lines
+    _key_field = 'date'
+
+
+    def _is_finish(self, line, next_line, context=None):
+        line_date = datetime.strptime(line['date'], DEFAULT_SERVER_DATE_FORMAT)
+        next_line_date = datetime.strptime(next_line['date'], DEFAULT_SERVER_DATE_FORMAT)
+        return not(timedelta(days=-30) <= line_date - next_line_date <= timedelta(days=30))
