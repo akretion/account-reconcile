@@ -132,30 +132,38 @@ class account_easy_reconcile(orm.Model):
     _name = 'account.easy.reconcile'
     _description = 'account easy reconcile'
 
+    def _get_domain_for_unrec(self, cr, uid, task, partial=False, context=None):
+        domain = ['|', 
+            ('account_id', '=', task.account.id),
+            ('account_id', 'in', [child.id for child in task.account.child_parent_ids]),
+            ('reconcile_id', '=', False),
+        ]
+        if partial:
+            domain.append(('reconcile_partial_id', '!=', False))
+        else:
+            domain.append(('reconcile_partial_id', '=', False))
+        return domain
+
     def _get_total_unrec(self, cr, uid, ids, name, arg, context=None):
         obj_move_line = self.pool.get('account.move.line')
         res = {}
         for task in self.browse(cr, uid, ids, context=context):
-            res[task.id] = len(obj_move_line.search(
-                cr, uid,
-                ['|', 
-                 ('account_id', '=', task.account.id),
-                 ('account_id', 'in', [child.id for child in task.account.child_parent_ids]),
-                 ('reconcile_id', '=', False),
-                 ('reconcile_partial_id', '=', False)],
-                context=context))
+            domain = self._get_domain_for_unrec(cr, uid, task, context=context)
+            res[task.id] = obj_move_line.search(cr, uid, domain,
+                context=context,
+                count=True)
         return res
 
     def _get_partial_rec(self, cr, uid, ids, name, arg, context=None):
         obj_move_line = self.pool.get('account.move.line')
         res = {}
         for task in self.browse(cr, uid, ids, context=context):
-            res[task.id] = len(obj_move_line.search(
-                cr, uid,
-                [('account_id', '=', task.account.id),
-                 ('reconcile_id', '=', False),
-                 ('reconcile_partial_id', '!=', False)],
-                context=context))
+            domain = self._get_domain_for_unrec(cr, uid, task,
+                partial=True,
+                context=context)
+            res[task.id] = obj_move_line.search(cr, uid, domain,
+                context=context,
+                count=True)
         return res
 
     def _last_history(self, cr, uid, ids, name, args, context=None):
@@ -296,3 +304,28 @@ class account_easy_reconcile(orm.Model):
         if not rec.last_history:
             self._no_history(cr, uid, rec, context=context)
         return rec.last_history.open_partial()
+
+    def open_unreconcile_move_lines(self, cr, uid, rec_id, context=None):
+        """ Get the all of the entrie unreconciled and return
+        the action which opens all of this move lines
+        """
+        if isinstance(rec_id, (tuple, list)):
+            assert len(rec_id) == 1, \
+                    "Only 1 id expected"
+            rec_id = rec_id[0]
+        obj_move_line = self.pool['account.move.line']
+        rec = self.browse(cr, uid, rec_id, context=context)
+        domain = self._get_domain_for_unrec(cr, uid, rec, context=context)
+        return {
+            'name': 'Unreconcile Entries',
+            'view_mode': 'tree,form',
+            'view_id': False,
+            'view_type': 'form',
+            'res_model': 'account.move.line',
+            'type': 'ir.actions.act_window',
+            'nodestroy': True,
+            'target': 'current',
+            'domain': unicode(domain),
+            }
+
+

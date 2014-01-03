@@ -12,6 +12,10 @@
                 <header>
                     <button name="run_reconcile" class="oe_highlight"
                         string="Start Auto Reconciliation" type="object"/>
+                    <button icon="STOCK_JUMP_TO" name="open_unreconcile_move_lines"
+                        class="oe_highlight"
+                        string="Display items unreconciled"
+                        type="object"/>
                     <button icon="STOCK_JUMP_TO" name="last_history_reconcile"
                         class="oe_highlight"
                         string="Display items reconciled on the last run"
