@@ -21,6 +21,26 @@
 
 from openerp.osv import fields, orm
 from operator import itemgetter, attrgetter
+import logging
+from contextlib import contextmanager
+
+_logger = logging.getLogger(__name__)
+
+@contextmanager
+def commit(cr):
+    """
+    Commit the cursor after the ``yield``, or rollback it if an
+    exception occurs.
+
+    Warning: using this method, the exceptions are logged then discarded.
+    """
+    try:
+        yield
+    except Exception, e:
+        cr.rollback()
+        _logger.exception('Error during an automatic workflow action.')
+    else:
+        cr.commit()
 
 
 class easy_reconcile_base(orm.AbstractModel):
@@ -187,22 +207,24 @@ class easy_reconcile_base(orm.AbstractModel):
 
             period_id = self.pool.get('account.period').find(
                 cr, uid, dt=date, context=context)[0]
-
-            ml_obj.reconcile(
-                cr, uid,
-                line_ids,
-                type='auto',
-                writeoff_acc_id=writeoff_account_id,
-                writeoff_period_id=period_id,
-                writeoff_journal_id=rec.journal_id.id,
-                context=rec_ctx)
-            return True, True
+            with commit(cr):
+                ml_obj.reconcile(
+                    cr, uid,
+                    line_ids,
+                    type='auto',
+                    writeoff_acc_id=writeoff_account_id,
+                    writeoff_period_id=period_id,
+                    writeoff_journal_id=rec.journal_id.id,
+                    context=rec_ctx)
+                return True, True
         elif allow_partial:
-            ml_obj.reconcile_partial(
-                cr, uid,
-                line_ids,
-                type='manual',
-                context=rec_ctx)
-            return True, False
+            with commit(cr):
+                ml_obj.reconcile_partial(
+                    cr, uid,
+                    line_ids,
+                    type='manual',
+                    context=rec_ctx)
+                return True, False
 
         return False, False
+
