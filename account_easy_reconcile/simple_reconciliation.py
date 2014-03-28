@@ -21,6 +21,31 @@
 
 from openerp.osv.orm import AbstractModel, TransientModel
 
+import logging
+from contextlib import contextmanager
+
+_logger = logging.getLogger(__name__)
+
+@contextmanager
+def commit(cr):
+    """
+    Commit the cursor after the ``yield``, or rollback it if an
+    exception occurs.
+
+    Warning: using this method, the exceptions are logged then discarded.
+    """
+    try:
+        yield
+    except Exception, e:
+        cr.rollback()
+        raise
+        _logger.exception('Error during an automatic workflow action.')
+    else:
+        cr.commit()
+
+
+
+
 
 class easy_reconcile_simple(AbstractModel):
 
@@ -118,3 +143,42 @@ class easy_reconcile_simple_reference(TransientModel):
     # has to be subclassed
     # field name used as key for matching the move lines
     _key_field = 'ref'
+
+
+#TODO FIXME this function have been added temporary in order to clear the historic
+class easy_reconcile_all_move_partner(TransientModel):
+    _name = 'easy.reconcile.all.move.partner'
+    _inherit = 'easy.reconcile.base'
+    _auto = True  # False when inherited from AbstractModel
+    
+    def _action_rec(self, cr, uid, rec, context=None):
+        """Match all move lines of a partner, do not allow partial reconcile"""
+        res = []
+        query = \
+        """SELECT partner_id FROM account_move_line
+            WHERE account_id=%s AND reconcile_id is NULL AND date < '2014-01-01'
+            GROUP BY partner_id
+            HAVING abs(sum(debit) - sum(credit)) < 0.5
+        """
+        move_line_obj = self.pool['account.move.line']
+        params = (rec.account_id.id,)
+        cr.execute(query, params)
+        partner_ids = cr.fetchall()
+        for partner_id in partner_ids:
+            line_ids = move_line_obj.search(cr, uid, [
+                ('partner_id', '=', partner_id[0]),
+                ('account_id', '=', rec.account_id.id),
+                ('reconcile_id', '=', False),
+                ('date', '<', '2014-01-01'),
+                ], context=context)
+            if len(line_ids) > 1:
+                lines = move_line_obj.read(cr, uid, line_ids, [], context=context)
+                with commit(cr):
+                    print line_ids
+                    reconciled, dummy = self._reconcile_lines(
+                        cr, uid, rec, lines,
+                        allow_partial=False, context=context)
+                    res += line_ids
+        return res, []
+
+

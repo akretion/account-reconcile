@@ -78,7 +78,8 @@ class account_easy_reconcile_method(orm.Model):
             ('easy.reconcile.simple.name', 'Simple. Amount and Name'),
             ('easy.reconcile.simple.partner', 'Simple. Amount and Partner'),
             ('easy.reconcile.simple.reference', 'Simple. Amount and Reference'),
-            ]
+            ('easy.reconcile.all.move.partner', 'All move per Partner'), 
+        ]
 
     def _get_rec_method(self, cr, uid, context=None):
         return self._get_all_rec_method(cr, uid, context=None)
