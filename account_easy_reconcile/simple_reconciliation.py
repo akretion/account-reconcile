@@ -23,6 +23,28 @@ from openerp.osv.orm import AbstractModel, TransientModel
 from datetime import datetime, timedelta
 from tools import DEFAULT_SERVER_DATE_FORMAT
 
+import logging
+from contextlib import contextmanager
+
+_logger = logging.getLogger(__name__)
+
+@contextmanager
+def commit(cr):
+    """
+    Commit the cursor after the ``yield``, or rollback it if an
+    exception occurs.
+
+    Warning: using this method, the exceptions are logged then discarded.
+    """
+    try:
+        yield
+    except Exception, e:
+        cr.rollback()
+        raise
+        _logger.exception('Error during an automatic workflow action.')
+    else:
+        cr.commit()
+
 
 class easy_reconcile_simple(AbstractModel):
 
@@ -139,3 +161,40 @@ class easy_reconcile_simple_date(TransientModel):
         line_date = datetime.strptime(line['date'], DEFAULT_SERVER_DATE_FORMAT)
         next_line_date = datetime.strptime(next_line['date'], DEFAULT_SERVER_DATE_FORMAT)
         return not(timedelta(days=-30) <= line_date - next_line_date <= timedelta(days=30))
+
+
+class easy_reconcile_all_move_partner(TransientModel):
+    _name = 'easy.reconcile.all.move.partner'
+    _inherit = 'easy.reconcile.base'
+    _auto = True  # False when inherited from AbstractModel
+    
+    def _action_rec(self, cr, uid, rec, context=None):
+        """Match all move lines of a partner, do not allow partial reconcile"""
+        res = []
+        query = \
+        """SELECT partner_id FROM account_move_line
+            WHERE account_id=%s AND reconcile_id is NULL
+            GROUP BY partner_id
+            HAVING  sum(debit) = sum(credit)
+        """
+        move_line_obj = self.pool['account.move.line']
+        params = (rec.account_id.id,)
+        cr.execute(query, params)
+        partner_ids = cr.fetchall()
+        for partner_id in partner_ids:
+            line_ids = move_line_obj.search(cr, uid, [
+                ('partner_id', '=', partner_id[0]),
+                ('account_id', '=', rec.account_id.id),
+                ('reconcile_id', '=', False),
+                ], context=context)
+            with commit(cr):
+                move_line_obj.reconcile(
+                    cr, uid,
+                    line_ids,
+                    type='auto',
+                    context=context)
+                print 'reconcile', line_ids
+                res += line_ids
+        return res, []
+
+

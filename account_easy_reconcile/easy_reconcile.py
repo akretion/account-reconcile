@@ -79,6 +79,7 @@ class account_easy_reconcile_method(orm.Model):
             ('easy.reconcile.simple.partner', 'Simple. Amount and Partner'),
             ('easy.reconcile.simple.reference', 'Simple. Amount and Reference'),
             ('easy.reconcile.simple.date', 'Simple. Amount and Date'),
+            ('easy.reconcile.all.move.partner', 'All move per Partner'),
             ]
 
     def _get_rec_method(self, cr, uid, context=None):
@@ -251,8 +252,8 @@ class account_easy_reconcile(orm.Model):
                     ml_rec_ids, ml_partial_ids = rec_model.automatic_reconcile(
                         cr, uid, auto_rec_id, context=context)
 
-                all_ml_rec_ids += ml_rec_ids
-                all_ml_partial_ids += ml_partial_ids
+                    all_ml_rec_ids += ml_rec_ids
+                    all_ml_partial_ids += ml_partial_ids
 
             reconcile_ids = find_reconcile_ids(
                     'reconcile_id', all_ml_rec_ids)
