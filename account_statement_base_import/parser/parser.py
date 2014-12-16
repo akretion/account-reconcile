@@ -38,7 +38,7 @@ def UnicodeDictReader(utf8_data, **kwargs):
     for row in csv_reader:
         yield dict([(unicode(key or '', 'utf-8'),
                      unicode(value or '', 'utf-8'))
-                    for key, value in row.iteritems()])
+                    for key, value in row.iteritems() if key])
 
 
 class BankStatementImportParser(object):
