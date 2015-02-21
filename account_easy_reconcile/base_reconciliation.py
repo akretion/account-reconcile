@@ -88,7 +88,8 @@ class EasyReconcileBase(orm.AbstractModel):
     def _where(self, rec, *args, **kwargs):
         where = ("WHERE account_move_line.account_id = %s "
                  "AND COALESCE(account_move_reconcile.type,'') <> 'manual' "
-                 "AND account_move_line.reconcile_id IS NULL ")
+                 "AND account_move_line.reconcile_id IS NULL "
+                 "AND account_move_line.state != 'draft' ")
         # it would be great to use dict for params
         # but as we use _where_calc in _get_filter
         # which returns a list, we have to
@@ -125,9 +126,35 @@ class EasyReconcileBase(orm.AbstractModel):
         writeoff_amount = round(debit - credit, precision)
         return bool(writeoff_limit >= abs(writeoff_amount)), debit, credit
 
+    def _check_period_state(self, cr, uid, date, context=None):
+        period_obj = self.pool['account.period']
+        period_id = period_obj.find(cr, uid, dt=date, context=context)[0]
+        period = period_obj.browse(cr, uid, period_id, context=context)
+        if period.state == 'done':
+            return False
+        else:
+            return True
+
+    def _get_open_period_date(self, cr, uid, date, context=None):
+        cr.execute("""
+            SELECT date_start
+            FROM account_period
+            WHERE state = 'draft'
+                AND date_start > %s
+            ORDER BY date_start asc
+            LIMIT 1
+        """, (date,))
+
+        first_date_available = cr.fetchall()
+        if first_date_available:
+            return first_date_available[0][0]
+        else:
+            return date
+
     def _get_rec_date(self, cr, uid, rec, lines,
                       based_on='end_period_last_credit', context=None):
         period_obj = self.pool['account.period']
+        date = None
 
         def last_period(mlines):
             period_ids = [ml['period_id'] for ml in mlines]
@@ -145,18 +172,23 @@ class EasyReconcileBase(orm.AbstractModel):
             return [l for l in mlines if l['debit'] > 0]
 
         if based_on == 'end_period_last_credit':
-            return last_period(credit(lines)).date_stop
+            date = last_period(credit(lines)).date_stop
         if based_on == 'end_period':
-            return last_period(lines).date_stop
+            date = last_period(lines).date_stop
         elif based_on == 'newest':
-            return last_date(lines)['date']
+            date = last_date(lines)['date']
         elif based_on == 'newest_credit':
-            return last_date(credit(lines))['date']
+            date = last_date(credit(lines))['date']
         elif based_on == 'newest_debit':
-            return last_date(debit(lines))['date']
+            date = last_date(debit(lines))['date']
+
+        if date:
+            if not self._check_period_state(cr, uid, date, context=context):
+                date = self._get_open_period_date(
+                    cr, uid, date, context=context)
         # reconcilation date will be today
         # when date is None
-        return None
+        return date
 
     def _reconcile_lines(self, cr, uid, rec, lines, allow_partial=False,
                          context=None):
