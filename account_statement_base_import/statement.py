@@ -133,21 +133,26 @@ class AccountStatementProfil(Model):
         values = parser_vals
         values['statement_id'] = statement_id
         date = values.get('date')
+        values['period_id'] = self._get_period(cr, uid, date, context=context)
+        values['type'] = 'general'
+        return values
+
+    def _get_period(self, cr, uid, date, context=None):
+        if context is None:
+            context = {}
         period_memoizer = context.get('period_memoizer')
         if not period_memoizer:
             period_memoizer = {}
             context['period_memoizer'] = period_memoizer
         if period_memoizer.get(date):
-            values['period_id'] = period_memoizer[date]
-        else:
-            # This is awfully slow...
-            periods = self.pool.get('account.period').find(cr, uid,
-                                                           dt=values.get('date'),
-                                                           context=context)
-            values['period_id'] = periods[0]
-            period_memoizer[date] = periods[0]
-        values['type'] = 'general'
-        return values
+            return period_memoizer[date]
+        # This is awfully slow...
+        periods = self.pool.get('account.period').find(cr, uid,
+                                                       dt=date,
+                                                       context=context)
+        period_id = periods[0]
+        period_memoizer[date] = period_id
+        return period_id
 
     def prepare_tranfer_line_vals(self, cursor, uid, parser, result_row_list,
                                         profile, statement_id, context=None):
@@ -155,9 +160,11 @@ class AccountStatementProfil(Model):
             partner_id = profile.partner_id and profile.partner_id.id or False
             transfer_account_id = profile.internal_account_transfer_id.id or False
             statement_line_obj = self.pool.get('account.bank.statement.line')
+            date = parser.get_statement_date()
+            period_id = self._get_period(cursor, uid, date, context)
             return {
                 'name': _('Transfer'),
-                'date': parser.get_statement_date(),
+                'date': date,
                 'amount': parser.get_transfer_amount(),
                 'partner_id': partner_id,
                 'type': 'general',
@@ -166,6 +173,7 @@ class AccountStatementProfil(Model):
                 'ref': 'transfer',
                 # !! We set the already_completed so auto-completion will not update those values !
                 'already_completed': True,
+                'period_id': period_id,
             }
 
 

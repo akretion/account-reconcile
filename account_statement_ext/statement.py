@@ -452,11 +452,11 @@ class AccountBankStatement(Model):
             account_id = account_payable
         else:
             account_id = account_receivable
-        if not account_id:
-            raise osv.except_osv(
-                _('Can not determine account'),
-                _('Please ensure that minimal properties are set')
-            )
+        #if not account_id:
+            #raise osv.except_osv(
+            #    _('Can not determine account'),
+            #    _('Please ensure that minimal properties are set')
+            #)
         return [account_id, ltype]
 
     def get_default_pay_receiv_accounts(self, cr, uid, context=None):
