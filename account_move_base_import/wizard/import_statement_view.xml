@@ -1,5 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
-<odoo>
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data>
+
     <record id="move_importer_view" model="ir.ui.view">
         <field name="name">credit.statement.import.config.view</field>
         <field name="model">credit.statement.import</field>
@@ -32,4 +34,6 @@
     </record>
 
     <menuitem id="move_importer_menu" name="Import Batch File" action="move_importer_action" parent="account.menu_finance_entries"/>
-</odoo>
+
+    </data>
+</openerp>

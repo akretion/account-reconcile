@@ -264,6 +264,7 @@ class AccountMoveLine(models.Model):
         avail = [
             k for k, col in model_cols.iteritems() if not hasattr(col, '_fnct')
         ]
+        avail += ['period_id', 'date', 'journal_id']
         keys = [k for k in move_store[0].keys() if k in avail]
         keys.sort()
         return keys
@@ -337,13 +338,13 @@ class AccountMove(models.Model):
     import_partner_id = fields.Many2one('res.partner',
                                         string="Partner from import")
 
-    @api.depends('line_ids.partner_id', 'import_partner_id')
+    @api.depends('line_id.partner_id', 'import_partner_id')
     def _compute_partner_id(self):
         for move in self:
             if move.import_partner_id:
                 move.partner_id = move.import_partner_id
-            elif move.line_ids:
-                move.partner_id = move.line_ids[0].partner_id
+            elif move.line_id:
+                move.partner_id = move.line_id[0].partner_id
 
     def write_completion_log(self, error_msg, number_imported):
         """Write the log in the completion_logs field of the bank statement to
@@ -356,7 +357,7 @@ class AccountMove(models.Model):
         :return True
         """
         user_name = self.env.user.name
-        number_line = len(self.line_ids)
+        number_line = len(self.line_id)
         log = self.completion_logs or ""
         completion_date = fields.Datetime.now()
         message = (_("%s Account Move %s has %s/%s lines completed by "
@@ -385,7 +386,7 @@ class AccountMove(models.Model):
             journal = move.journal_id
             rules = journal._get_rules()
             res = False
-            for line in move.line_ids:
+            for line in move.line_id:
                 try:
                     res = line._get_line_values_from_rules(rules)
                     if res:

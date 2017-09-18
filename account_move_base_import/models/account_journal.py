@@ -9,7 +9,7 @@ import traceback
 import os
 from openerp import _, api, fields, models
 from ..parser.parser import new_move_parser
-from openerp.exceptions import UserError, ValidationError
+from openerp.exceptions import Warning as UserError, ValidationError
 from operator import attrgetter
 
 
@@ -229,7 +229,7 @@ class AccountJournal(models.Model):
         move_line_obj = self.env['account.move.line']
         values = parser_vals
         values['company_id'] = self.company_id.id
-        values['currency_id'] = self.currency_id.id
+        values['currency_id'] = self.currency.id
         values['company_currency_id'] = self.company_id.currency_id.id
         values['journal_id'] = self.id
         values['move_id'] = move.id
@@ -243,7 +243,7 @@ class AccountJournal(models.Model):
         the profile.
         """
         vals = {'journal_id': self.id,
-                'currency_id': self.currency_id.id,
+                'currency_id': self.currency.id,
                 'import_partner_id': self.partner_id.id}
         vals.update(parser.get_move_vals())
         return vals

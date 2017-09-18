@@ -1,4 +1,6 @@
-<odoo>
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data>
     <record id="view_move_importer_form" model="ir.ui.view">
         <field name="name">account.move.view</field>
         <field name="model">account.move</field>
@@ -15,10 +17,10 @@
                         groups="account.group_account_invoice"
                         attrs="{'invisible': ['|', ('used_for_completion','=',False), ('state','not in', ['draft'])]}"/>
             </button>
-            <xpath expr="//field[@name='line_ids']/tree/field[@name='credit']" position="after">
+            <xpath expr="//field[@name='line_id']/tree/field[@name='credit']" position="after">
                 <field name="already_completed"/>
             </xpath>
-            <xpath expr="/form/sheet/notebook" position="inside">
+            <xpath expr="/form/notebook" position="inside">
                 <page string="Completion Logs" attrs="{'invisible':[('completion_logs','=',False)]}">
                     <field name="completion_logs" colspan="4" nolabel="1"/>
                 </page>
@@ -63,5 +65,7 @@
     </record>
 
     <menuitem string="Move Completion Rule" action="action_move_completion_rule_tree"
-              id="menu_action_move_completion_rule_tree_menu" parent="account.account_management_menu"/>
-</odoo>
+              id="menu_action_move_completion_rule_tree_menu" parent="account.menu_finance_bank_and_cash"/>
+
+    </data>
+</openerp>
