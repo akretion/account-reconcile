@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <openerp>
-    <data update="1">
+    <data noupdate="1">
 
     <record id="bank_statement_completion_rule_1" model="account.move.completion.rule">
         <field name="name">Match from line name (based on SO number)</field>
