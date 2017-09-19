@@ -233,6 +233,15 @@ class AccountJournal(models.Model):
         values['company_currency_id'] = self.company_id.currency_id.id
         values['journal_id'] = self.id
         values['move_id'] = move.id
+        if self.currency and self.company_id.currency_id != self.currency:
+            values['amount_currency'] = values['debit'] - values['credit']
+            move.date
+            for key in ('debit', 'credit'):
+                if values[key]:
+                    values[key] = self.currency.with_context(
+                        date=move.date).compute(
+                            values[key],
+                            self.company_id.currency_id)
         if not values.get('account_id', False):
             values['account_id'] = self.receivable_account_id.id
         values = move_line_obj._add_missing_default_values(values)
