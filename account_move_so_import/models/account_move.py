@@ -44,5 +44,7 @@ class AccountMoveCompletionRule(models.Model):
                   'than one partner while looking on SO by ref.') %
                 line.name)
         if len(orders) == 1:
-            res['partner_id'] = orders[0].partner_id.id
+            partner = self.env['res.partner']._find_accounting_partner(
+                orders[0].partner_invoice_id)
+            res['partner_id'] = partner.id
         return res
