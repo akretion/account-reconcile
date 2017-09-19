@@ -233,6 +233,8 @@ class AccountJournal(models.Model):
         values['company_currency_id'] = self.company_id.currency_id.id
         values['journal_id'] = self.id
         values['move_id'] = move.id
+        values['date'] = move.date
+        values['period_id'] = move.period_id.id
         if self.currency and self.company_id.currency_id != self.currency:
             values['amount_currency'] = values['debit'] - values['credit']
             move.date
@@ -255,6 +257,7 @@ class AccountJournal(models.Model):
                 'currency_id': self.currency.id,
                 'import_partner_id': self.partner_id.id}
         vals.update(parser.get_move_vals())
+        vals['period_id'] = self.env['account.period'].find(vals['date']).id
         return vals
 
     def multi_move_import(self, file_stream, ftype="csv"):
