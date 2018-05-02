@@ -200,7 +200,7 @@ class easy_reconcile_base(orm.AbstractModel):
 
         rec_ctx = dict(context, date_p=date)
         if below_writeoff:
-            if sum_credit < sum_debit:
+            if sum_credit > sum_debit:
                 writeoff_account_id = rec.account_profit_id.id
             else:
                 writeoff_account_id = rec.account_lost_id.id
