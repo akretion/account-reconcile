@@ -72,6 +72,9 @@ class EasyReconcileOptions(models.AbstractModel):
     expense_exchange_account_id = fields.Many2one('account.account',
                                                   string='Loss Exchange '
                                                   'Rate Account')
+    skip_same_journal = fields.Boolean(
+        'Skip same journal',
+        help='Do not reconcile line from the same journal')
 
 
 class AccountEasyReconcileMethod(models.Model):
@@ -192,6 +195,7 @@ class AccountEasyReconcile(models.Model):
                 (rec_method.income_exchange_account_id.id),
                 'journal_id': (rec_method.journal_id.id),
                 'date_base_on': rec_method.date_base_on,
+                'skip_same_journal': rec_method.skip_same_journal,
                 'filter': rec_method.filter}
 
     @api.multi

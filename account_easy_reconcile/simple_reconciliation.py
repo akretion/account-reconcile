@@ -42,7 +42,10 @@ class EasyReconcileSimple(models.AbstractModel):
                 if lines[count][self._key_field] != lines[i][self._key_field]:
                     break
                 check = False
-                if lines[count]['credit'] > 0 and lines[i]['debit'] > 0:
+                if self.skip_same_journal and lines[count]['journal_id']\
+                        == lines[i]['journal_id']:
+                    continue
+                elif lines[count]['credit'] > 0 and lines[i]['debit'] > 0:
                     credit_line = lines[count]
                     debit_line = lines[i]
                     check = True
