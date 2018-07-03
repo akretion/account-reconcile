@@ -58,10 +58,11 @@ class account_bank_statement(orm.Model):
     def _prepare_move(self, cr, uid, st_line, st_line_number, context=None):
         res = super(account_bank_statement, self).\
                 _prepare_move(cr, uid, st_line, st_line_number, context=context)
-        res.update({
-            'ref': st_line.statement_id.name,
-            'name': st_line.statement_id.name,
-            'date': st_line.statement_id.date,
+        if st_line.statement_id.profile_id.one_move:
+            res.update({
+                'ref': st_line.statement_id.name,
+                'name': st_line.statement_id.name,
+                'date': st_line.statement_id.date,
             })
         return res
 
