@@ -21,6 +21,7 @@
 ###############################################################################
 
 from openerp.osv import fields, orm, osv
+from openerp.tools import float_is_zero
 
 
 class AccountStatementProfile(orm.Model):
@@ -172,13 +173,13 @@ class account_bank_statement(orm.Model):
             payment += move_line.credit
         #Create 2 Transfer lines or One global tranfer line
         if st.profile_id.split_transfer_line:
-            if refund:
+            if refund and not float_is_zero(refund, precision_digits=2):
                 transfer_lines.append(['Refund Transfer', refund])
-            if payment:
+            if payment and not float_is_zero(payment, precision_digits=2):
                 transfer_lines.append(['Payment Transfer', payment])
         else:
             amount = payment + refund
-            if amount:
+            if amount and not float_is_zero(amount, precision_digits=2):
                 transfer_lines.append(['Transfer', amount])
         for transfer_line in transfer_lines:
             vals = self._prepare_transfer_move_line_vals(cr, uid, st, 
