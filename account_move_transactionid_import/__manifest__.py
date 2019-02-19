@@ -18,8 +18,6 @@
     'test': [
         'test/sale.yml',
         'test/completion_transactionid_test.yml',
-        'test/invoice.yml',
-        'test/completion_invoice_transactionid_test.yml',
     ],
     'website': 'http://www.camptocamp.com',
     'installable': True,
