@@ -109,6 +109,10 @@ class MassReconcileBase(models.AbstractModel):
                  if key in keys), lines)
         debit, credit = sums['debit'], sums['credit']
         writeoff_amount = round(debit - credit, precision)
+        if self.write_off_type == 'absolute':
+            writeoff_limit = self.write_off
+        elif self.write_off_type == 'rate':
+            writeoff_limit = max(credit, debit) * self.write_off / 100.
         return bool(writeoff_limit >= abs(writeoff_amount)), debit, credit
 
     @api.multi

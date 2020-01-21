@@ -30,6 +30,13 @@ class MassReconcileOptions(models.AbstractModel):
             ('actual', 'Today'),
         ]
 
+    write_off_type = fields.Selection([
+        ('rate', 'Rate'),
+        ('absolute', 'Absolute'),
+        ],
+        string='Write off type',
+        default='absolute',
+        )
     write_off = fields.Float('Write off allowed', default=0.)
     account_lost_id = fields.Many2one('account.account',
                                       string="Account Lost")
@@ -146,6 +153,7 @@ class AccountMassReconcile(models.Model):
     @api.model
     def _prepare_run_transient(self, rec_method):
         return {'account_id': rec_method.task_id.account.id,
+                'write_off_type': rec_method.write_off_type,
                 'write_off': rec_method.write_off,
                 'account_lost_id': (rec_method.account_lost_id.id),
                 'account_profit_id': (rec_method.account_profit_id.id),

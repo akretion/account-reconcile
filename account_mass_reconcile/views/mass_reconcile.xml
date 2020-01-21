@@ -118,6 +118,7 @@ The lines should have the same partner, and the credit entry ref. is matched wit
             <tree editable="top" string="Automatic Mass Reconcile Method">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
+                <field name="write_off_type"/>
                 <field name="write_off"/>
                 <field name="account_lost_id" attrs="{'required':[('write_off','>',0)]}"/>
                 <field name="account_profit_id" attrs="{'required':[('write_off','>',0)]}"/>
