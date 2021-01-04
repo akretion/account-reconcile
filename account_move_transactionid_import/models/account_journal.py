@@ -12,5 +12,6 @@ class AccountJournal(models.Model):
                 "generic_csvxls_transaction",
                 "Generic .csv/.xls based on SO transaction ID",
             )
-        ]
+        ],
+        ondelete={"generic_csvxls_transaction": "set default"},
     )
