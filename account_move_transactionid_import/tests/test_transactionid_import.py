@@ -10,8 +10,7 @@ from odoo.addons.account_move_base_import.tests.test_base_import import TestCoda
 
 class TestTransactionIdImport(TestCodaImport):
     def test_multiline_csv(self):
-        """Test import from csv
-        """
+        """Test import from csv"""
         self.journal.write({"import_type": "generic_csvxls_transaction"})
         file_name = get_module_resource(
             "account_move_transactionid_import", "tests", "data", "statement.csv"
@@ -20,8 +19,7 @@ class TestTransactionIdImport(TestCodaImport):
         self._validate_imported_moves(move_ids)
 
     def test_multiline_xls(self):
-        """Test import from xls
-        """
+        """Test import from xls"""
         self.journal.write({"import_type": "generic_csvxls_transaction"})
         file_name = get_module_resource(
             "account_move_transactionid_import", "tests", "data", "statement.xls"
@@ -30,7 +28,7 @@ class TestTransactionIdImport(TestCodaImport):
         self._validate_imported_moves(move_ids)
 
     def _import_file_multi(self, file_name):
-        """ import a file using the wizard
+        """import a file using the wizard
         return the create account.bank.statement object
         """
         with open(file_name, "rb") as f:

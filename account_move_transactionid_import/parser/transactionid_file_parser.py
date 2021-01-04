@@ -17,12 +17,12 @@ class TransactionIDFileParser(FileParser):
 
     def __init__(self, profile, ftype="csv", extra_fields=None, header=None, **kwargs):
         """Add transaction_id in header keys
-            :param char: profile: Reference to the profile
-            :param char: ftype: extension of the file (could be csv or xls)
-            :param dict: extra_fields: extra fields to add to the conversion
-              dict. In the format {fieldname: fieldtype}
-            :param list: header : specify header fields if the csv file has no
-              header
+        :param char: profile: Reference to the profile
+        :param char: ftype: extension of the file (could be csv or xls)
+        :param dict: extra_fields: extra fields to add to the conversion
+          dict. In the format {fieldname: fieldtype}
+        :param list: header : specify header fields if the csv file has no
+          header
         """
         conversion_dict = {
             "transaction_id": ustr,
