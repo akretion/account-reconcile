@@ -80,6 +80,8 @@ class AccountMassReconcileMethod(models.Model):
              'Simple. Amount and Reference'),
             ('mass.reconcile.advanced.ref',
              'Advanced. Partner and Ref.'),
+            ('mass.reconcile.advanced.stripe',
+             'Advanced. Stripe (Partner and Invoice Origin)'),
         ]
 
     def _selection_name(self):

@@ -60,6 +60,11 @@ The lines should have the same amount (with the write-off) and the same referenc
                               <label for="reconcile_method" string="Match multiple debit vs multiple credit entries. Allow partial reconciliation.
 The lines should have the same partner, and the credit entry ref. is matched with the debit entry ref. or name." colspan="4"/>
                           </group>
+                          <group colspan="2" col="2">
+                              <separator colspan="4" string="Advanced. Stripe (Partner and Invoice Origin"/>
+                              <label for="reconcile_method" string="Match multiple debit vs multiple credit entries. Allow partial reconciliation.
+The lines should have the same partner, and the credit entry Name is matched with the debit entry Invoice Origin (with support for refunds)" colspan="4"/>
+                          </group>
                         </page>
                     </notebook>
                 </sheet>

@@ -102,3 +102,36 @@ class MassReconcileAdvancedRef(models.TransientModel):
         yield ('partner_id', move_line['partner_id'])
         yield ('ref', ((move_line['ref'] or '').lower().strip(),
                        move_line['name'].lower().strip()))
+
+
+class MassReconcileAdvancedStripe(models.TransientModel):
+
+    _name = 'mass.reconcile.advanced.stripe'
+    _inherit = 'mass.reconcile.advanced'
+
+    @staticmethod
+    def _skip_line(move_line):
+        """
+        When True is returned on some conditions, the credit move line
+        will be skipped for reconciliation. Can be inherited to
+        skip on some conditions. ie: ref or partner_id is empty.
+        """
+        return not (move_line.get('name') and "-" in move_line["name"] and move_line.get('partner_id'))
+
+    @staticmethod
+    def _matchers(move_line):
+        """
+        The ref will be the Sale Order name prefixed with a transaction id. So we strip the transaction ID
+        Also in case of a negative amount, "REFUND FOR CHARGE (" will be added as suffix
+        """
+        return (('partner_id', move_line['partner_id']),
+                ('ref', ((move_line["name"][:move_line["name"].index("-")]),
+                    (move_line["name"][move_line["name"].find("REFUND FOR CHARGE (")+19:move_line["name"].index("-")]))))
+
+    @staticmethod
+    def _opposite_matchers(move_line):
+        """
+        ref is compared to the invoice_id.origin field which contains the Sale Order name
+        """
+        yield ('partner_id', move_line['partner_id'])
+        yield ('ref', move_line.get('invoice_id').get('origin') if move_line.get("invoice_id") else "")
