@@ -1,0 +1,31 @@
+# Copyright 2022 CreuBlanca
+# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
+
+{
+    "name": "Account Reconcile Oca",
+    "summary": """
+        Reconcile addons for Odoo CE accounting""",
+    "version": "16.0.1.0.0",
+    "license": "AGPL-3",
+    "author": "CreuBlanca,Odoo Community Association (OCA)",
+    "website": "https://github.com/OCA/account-reconcile",
+    "depends": [
+        "account",
+        "base_sparse_field",
+    ],
+    "data": [
+        "views/account_journal.xml",
+        "views/account_bank_statement_line.xml",
+    ],
+    "demo": [],
+    "assets": {
+        "web.assets_backend": [
+            "account_reconcile_oca/static/src/js/reconcile_data_widget.esm.js",
+            "account_reconcile_oca/static/src/js/reconcile_renderer.esm.js",
+            "account_reconcile_oca/static/src/js/reconcile_controller.esm.js",
+            "account_reconcile_oca/static/src/js/reconcile_view.esm.js",
+            "account_reconcile_oca/static/src/xml/reconcile.xml",
+            "account_reconcile_oca/static/src/scss/reconcile.scss",
+        ],
+    },
+}
