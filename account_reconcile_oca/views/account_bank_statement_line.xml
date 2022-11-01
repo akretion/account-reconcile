@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2022 CreuBlanca
+     License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl). -->
+<odoo>
+
+    <record id="bank_statement_line_reconcile_view" model="ir.ui.view">
+        <field name="name">account.bank.statement.line.reconcile</field>
+        <field name="model">account.bank.statement.line</field>
+        <field name="arch" type="xml">
+            <kanban js_class="reconcile">
+                <field name="is_reconciled" />
+                <templates>
+                    <t t-name="kanban-box">
+                        <div
+                            t-attf-class="oe_kanban_card oe_kanban_global_click"
+                            style="width:100%"
+                        >
+                            <div>
+                                <field name="date" />
+                            </div>
+                            <div>
+                                <field name="partner_id" />
+                            </div>
+                            <div>
+                                <field name="amount" />
+                            </div>
+                            <div>
+                                <field name="payment_ref" />
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="bank_statement_line_form_view" model="ir.ui.view">
+        <field name="name">account.bank.statement.line.reconcile</field>
+        <field name="model">account.bank.statement.line</field>
+        <field name="arch" type="xml">
+            <form>
+                <button
+                    name="reconcile_bank_line"
+                    type="object"
+                    string="Reconcile"
+                    class="btn btn-success"
+                />
+                <button
+                    name="clean_reconcile"
+                    type="object"
+                    string="clean"
+                    class="btn"
+                />
+                    <field name="name" invisible="1" />
+                    <field name="partner_id" invisible="1" />
+                    <field name="company_id" invisible="1" />
+                    <field name="manual_reference" invisible="1" />
+                <field
+                    name="reconcile_data_info"
+                    nolabel="1"
+                    widget="account_reconcile_oca_data"
+                    class="w-100"
+                />
+
+                <notebook>
+                    <page name="manual" string="Manual operation">
+                        <group>
+                            <field name="manual_account_id" string="Account" />
+                            <field name="manual_name" string="Name" />
+                            <field name="manual_amount" string="Amount" />
+                        </group>
+                    </page>
+                </notebook>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="action_bank_statement_line_reconcile" model="ir.actions.act_window">
+        <field name="name">Reconcile bank statement lines</field>
+        <field name="res_model">account.bank.statement.line</field>
+        <field name="view_mode">tree</field>
+        <field
+            name="view_ids"
+            eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('bank_statement_line_reconcile_view')})]"
+        />
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+            Nothing to reconcile
+            </p>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t
+        t-name="account_reconcile_oca.ReconcileRenderer"
+        t-inherit="web.KanbanRenderer"
+        t-inherit-mode="primary"
+        owl="1"
+    >
+        <xpath expr="div[hasclass('o_kanban_renderer')]" position="attributes">
+            <attribute
+                name="class"
+                add="o_account_reconcile_oca_selector"
+                separator=" "
+            />
+        </xpath>
+    </t>
+    <t
+        t-name="account_reconcile_oca.ReconcileController"
+        t-inherit="web.KanbanView"
+        t-inherit-mode="primary"
+        owl="1"
+    >
+        <xpath expr="//Layout" position="attributes">
+            <attribute
+                name="className"
+            >model.useSampleModel ? 'o_view_sample_data o_account_reconcile_oca' : 'o_account_reconcile_oca'</attribute>
+        </xpath>
+        <xpath expr="//Layout" position="inside">
+            <div class="o_account_reconcile_oca_info">
+            <t t-if="state.selectedRecordId">
+                <View t-props="viewReconcileInfo" t-key="state.selectedRecordId" />
+                </t>
+            </div>
+        </xpath>
+    </t>
+    <t t-name="account_reconcile_oca.ReconcileDataWidget" owl="1">
+        <table
+            class="table table-sm position-relative mb-0 table-striped"
+            style="table-layout: auto"
+        >
+            <thead>
+                <th>Account</th>
+                <th>Partner</th>
+                <th>Date</th>
+                <th>Label</th>
+                <th class="text-end">Debit</th>
+                <th class="text-end">Credit</th>
+            </thead>
+            <tbody>
+                <t
+                    t-foreach="getReconcileLines()"
+                    t-as="reconcile_line"
+                    t-key="reconcile_line_index"
+                >
+                    <tr
+                        t-on-click="(ev) => this.selectReconcileLine(ev, reconcile_line)"
+                    >
+                        <td t-esc="reconcile_line.account_id[1]" />
+                        <td>
+                            <span
+                                t-esc="reconcile_line.partner_id[1]"
+                                t-if="reconcile_line.partner_id"
+                            />
+                        </td>
+                        <td
+                            t-esc="reconcile_line.date"
+                        /> <!-- TODO: Fix localization format... -->
+                        <td t-esc="reconcile_line.name" />
+                        <td class="text-end" t-esc="reconcile_line.debit" />
+                        <td class="text-end" t-esc="reconcile_line.credit" />
+                    </tr>
+                </t>
+            </tbody>
+        </table>
+    </t>
+</templates>
