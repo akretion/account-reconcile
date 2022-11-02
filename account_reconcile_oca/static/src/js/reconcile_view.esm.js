@@ -9,6 +9,7 @@ export const reconcileView = {
     ...kanbanView,
     Renderer: ReconcileRenderer,
     Controller: ReconcileController,
+    buttonTemplate: "account_reconcile.ReconcileView.Buttons",
 };
 
 registry.category("views").add("reconcile", reconcileView);

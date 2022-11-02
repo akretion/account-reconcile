@@ -2,6 +2,7 @@
 const {useState} = owl;
 import {KanbanController} from "@web/views/kanban/kanban_controller";
 import {View} from "@web/views/view";
+import {useService} from "@web/core/utils/hooks";
 
 export class ReconcileController extends KanbanController {
     async setup() {
@@ -9,7 +10,15 @@ export class ReconcileController extends KanbanController {
         this.state = useState({
             selectedRecordId: null,
         });
+        this.orm = useService("orm");
+        this.action = useService("action");
         this.model.addEventListener("update", () => this.selectRecord(), {once: true});
+    }
+    async onClickNewButton() {
+        const action = await this.orm.call(this.props.resModel, "action_new_line", [], {
+            context: this.props.context,
+        });
+        this.action.doAction(action);
     }
     get viewReconcileInfo() {
         return {
@@ -17,7 +26,8 @@ export class ReconcileController extends KanbanController {
             type: "form",
             context: {
                 ...(this.props.context || {}),
-                form_view_ref: "account_reconcile_oca.bank_statement_line_form_view",
+                form_view_ref:
+                    "account_reconcile_oca.bank_statement_line_form_reconcile_view",
             },
             display: {controlPanel: false},
             mode: this.props.mode || "edit",
@@ -31,7 +41,6 @@ export class ReconcileController extends KanbanController {
                 (modelRecord) =>
                     !modelRecord.data.is_reconciled || modelRecord.data.to_check
             );
-            console.log(records);
             if (records.length === 0) {
                 return;
             }

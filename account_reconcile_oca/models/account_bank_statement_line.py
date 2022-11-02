@@ -10,23 +10,123 @@ class AccountBankStatementLine(models.Model):
     _inherit = "account.bank.statement.line"
 
     reconcile_data_info = fields.Serialized(
-        compute="_compute_reconcile_data_info", inverse="_inverse_reconcile_data_info"
+        compute="_compute_reconcile_data_info",
+        inverse="_inverse_reconcile_data_info",
+        prefetch=False,
     )
     reconcile_data = fields.Serialized()
-    manual_reference = fields.Char(store=False, default=False)
+    manual_reference = fields.Char(store=False, default=False, prefetch=False)
     manual_account_id = fields.Many2one(
-        "account.account", check_company=True, store=False, default=False
+        "account.account",
+        check_company=True,
+        store=False,
+        default=False,
+        prefetch=False,
     )
-    manual_name = fields.Char(store=False, default=False)
-    manual_amount = fields.Monetary(store=False, default=False)
-    reconcile_auxiliary_id = fields.Integer(store=False, default=1)
+    manual_name = fields.Char(store=False, default=False, prefetch=False)
+    manual_amount = fields.Monetary(store=False, default=False, prefetch=False)
+    add_account_move_line_id = fields.Many2one(
+        "account.move.line",
+        check_company=True,
+        store=False,
+        default=False,
+        prefetch=False,
+        domain=[
+            ("parent_state", "=", "posted"),
+            ("amount_residual", "!=", 0),
+            ("account_id.reconcile", "=", True),
+        ],
+        context={
+            "tree_view_ref": "account_reconcile_oca.account_move_line_tree_reconcile_view",
+            "search_view_ref": "account_reconcile_oca.account_move_line_search_reconcile_view",
+        },
+    )
+    reconcile_auxiliary_id = fields.Integer(
+        store=False,
+        default=1,
+        prefetch=False,
+    )
+
+    def save(self):
+        # TODO: Launch a refresh of data....
+        return {"type": "ir.actions.act_window_close"}
+
+    @api.model
+    def action_new_line(self):
+        action = self.env["ir.actions.act_window"]._for_xml_id(
+            "account_reconcile_oca.action_bank_statement_line_create"
+        )
+        action["context"] = self.env.context
+        return action
+
+    @api.onchange("add_account_move_line_id")
+    def _onchange_add_account_move_line_id(self):
+        if self.add_account_move_line_id:
+            data = self.reconcile_data_info["data"]
+            new_data = []
+            is_new_line = True
+            pending_amount = 0.0
+            for line in data:
+                if line["kind"] != "suspense":
+                    pending_amount += line["amount"]
+                if line.get("counterpart_line_id") == self.add_account_move_line_id.id:
+                    is_new_line = False
+                else:
+                    new_data.append(line)
+            if is_new_line:
+                new_data.append(
+                    self._get_reconcile_line(
+                        self.add_account_move_line_id, "other", True, pending_amount
+                    )
+                )
+            self.reconcile_data_info = {"data": self._recompute_suspense_line(new_data)}
+            self.add_account_move_line_id = False
+
+    def _recompute_suspense_line(self, data):
+        total_amount = 0
+        new_data = []
+        suspense_line = False
+        for line in data:
+            if line["kind"] != "suspense":
+                new_data.append(line)
+                total_amount += line["amount"]
+            else:
+                suspense_line = line
+        if not float_is_zero(
+            total_amount, precision_digits=self.currency_id.decimal_places
+        ):
+            if suspense_line:
+                suspense_amount = suspense_line["amount"] - total_amount
+                suspense_line.update(
+                    {
+                        "amount": -suspense_amount,
+                        "credit": -suspense_amount if suspense_amount < 0 else 0.0,
+                        "debit": suspense_amount if suspense_amount > 0 else 0.0,
+                    }
+                )
+            else:
+                suspense_line = {
+                    "reference": "reconcile_auxiliary;%s" % self.reconcile_auxiliary_id,
+                    "id": False,
+                    "account_id": self.journal_id.suspense_account_id.name_get()[0],
+                    "partner_id": self.partner_id
+                    and self.partner_id.name_get()[0]
+                    or False,
+                    "date": fields.Date.to_string(self.date),
+                    "name": self.name,
+                    "amount": -total_amount,
+                    "credit": total_amount if total_amount > 0 else 0.0,
+                    "debit": -total_amount if total_amount < 0 else 0.0,
+                    "kind": "suspense",
+                }
+                self.reconcile_auxiliary_id += 1
+            new_data.append(suspense_line)
+        return new_data
 
     @api.onchange("manual_account_id", "manual_name", "manual_amount")
     def _onchange_manual_reconcile_vals(self):
         self.ensure_one()
-        data = self.reconcile_data_info["data"]
-        total_amount = 0.0
-        suspense_line = None
+        data = self.reconcile_data_info.get("data", [])
         for line in data:
             if line["reference"] == self.manual_reference:
                 line.update(
@@ -41,40 +141,7 @@ class AccountBankStatementLine(models.Model):
                         "kind": line["kind"] if line["kind"] != "suspense" else "other",
                     }
                 )
-            if line["kind"] == "suspense":
-                suspense_line = line
-            total_amount += line["amount"]
-        if not float_is_zero(
-            total_amount, precision_digits=self.currency_id.decimal_places
-        ):
-            if suspense_line:
-                suspense_amount = suspense_line["amount"] - total_amount
-                suspense_line.update(
-                    {
-                        "amount": -suspense_amount,
-                        "credit": -suspense_amount if suspense_amount < 0 else 0.0,
-                        "debit": suspense_amount if suspense_amount > 0 else 0.0,
-                    }
-                )
-            else:
-                data.append(
-                    {
-                        "reference": "reconcile_auxiliary;%s"
-                        % self.reconcile_auxiliary_id,
-                        "id": False,
-                        "account_id": self.journal_id.suspense_account_id.name_get()[0],
-                        "partner_id": self.partner_id
-                        and self.partner_id.name_get()[0]
-                        or False,
-                        "date": fields.Date.to_string(self.date),
-                        "name": self.name,
-                        "amount": -total_amount,
-                        "credit": total_amount if total_amount > 0 else 0.0,
-                        "debit": -total_amount if total_amount < 0 else 0.0,
-                        "kind": "suspense",
-                    }
-                )
-                self.reconcile_auxiliary_id += 1
+        data = self._recompute_suspense_line(data)
         self.reconcile_data_info = {"data": data}
 
     @api.depends("reconcile_data")
@@ -103,19 +170,29 @@ class AccountBankStatementLine(models.Model):
         self.reconcile_data_info = self._default_reconcile_data()
         self.reconcile_data = {}
 
-    def _get_reconcile_line(self, line, kind):
-        return {
+    def _get_reconcile_line(self, line, kind, is_counterpart=False, max_amount=False):
+
+        amount = line.debit - line.credit
+        if max_amount:
+            if -amount > max_amount > 0:
+                amount = -max_amount
+            if -amount < max_amount < 0:
+                amount = -max_amount
+        vals = {
             "reference": "account.move.line;%s" % line.id,
             "id": line.id,
             "account_id": line.account_id.name_get()[0],
             "partner_id": line.partner_id and line.partner_id.name_get()[0] or False,
             "date": fields.Date.to_string(line.date),
             "name": line.name,
-            "debit": line.debit,
-            "credit": line.credit,
-            "amount": line.debit - line.credit,
+            "debit": amount if amount > 0 else 0.0,
+            "credit": -amount if amount < 0 else 0.0,
+            "amount": amount,
             "kind": kind,
         }
+        if is_counterpart:
+            vals["counterpart_line_id"] = line.id
+        return vals
 
     def reconcile_bank_line(self):
         self.ensure_one()

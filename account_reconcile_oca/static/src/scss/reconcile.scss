@@ -19,4 +19,9 @@
         width: 70%;
         height: 100%;
     }
+    .o_form_view {
+        .o_field_widget.o_field_account_reconcile_oca_match {
+            display: inline;
+        }
+    }
 }
