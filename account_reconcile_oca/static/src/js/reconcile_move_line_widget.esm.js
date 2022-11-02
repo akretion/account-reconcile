@@ -33,7 +33,7 @@ export class AccountReconcileMatchWidget extends Component {
             },
             // Disables de selector
             allowSelectors: false,
-            // We need to force the search view in order to show the right one,
+            // We need to force the search view in order to show the right one
             searchViewId: false,
             parentRecord: this.props.record,
             parentField: this.props.name,
