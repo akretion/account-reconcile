@@ -23,6 +23,13 @@ class AccountBankStatementLine(models.Model):
         default=False,
         prefetch=False,
     )
+    manual_partner_id = fields.Many2one(
+        "res.partner",
+        check_company=True,
+        store=False,
+        default=False,
+        prefetch=False,
+    )
     manual_name = fields.Char(store=False, default=False, prefetch=False)
     manual_amount = fields.Monetary(store=False, default=False, prefetch=False)
     add_account_move_line_id = fields.Many2one(
@@ -113,6 +120,7 @@ class AccountBankStatementLine(models.Model):
                     "credit": total_amount if total_amount > 0 else 0.0,
                     "debit": -total_amount if total_amount < 0 else 0.0,
                     "kind": "suspense",
+                    "currency_id": self.currency_id.id,
                 }
                 self.reconcile_auxiliary_id += 1
             new_data.append(suspense_line)
@@ -200,6 +208,7 @@ class AccountBankStatementLine(models.Model):
             "debit": amount if amount > 0 else 0.0,
             "credit": -amount if amount < 0 else 0.0,
             "amount": amount,
+            "currency_id": line.currency_id.id,
             "kind": kind,
         }
         if is_counterpart:

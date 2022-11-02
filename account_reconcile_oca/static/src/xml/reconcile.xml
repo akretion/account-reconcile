@@ -69,11 +69,16 @@
                             />
                         </td>
                         <td
-                            t-esc="reconcile_line.date"
+                            t-esc="reconcile_line.date_format"
                         /> <!-- TODO: Fix localization format... -->
-                        <td t-esc="reconcile_line.name" />
-                        <td class="text-end" t-esc="reconcile_line.debit" />
-                        <td class="text-end" t-esc="reconcile_line.credit" />
+                        <td>
+                            <span
+                                t-esc="reconcile_line.name"
+                                t-if="reconcile_line.name"
+                            />
+                        </td>
+                        <td class="text-end" t-esc="reconcile_line.debit_format" />
+                        <td class="text-end" t-esc="reconcile_line.credit_format" />
                     </tr>
                 </t>
             </tbody>
