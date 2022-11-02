@@ -33,6 +33,12 @@
             </div>
         </xpath>
     </t>
+    <t t-name="account_reconcile.ReconcileView.Buttons" owl="1">
+        <button t-on-click="onClickNewButton" class="btn btn-success">Create</button>
+    </t>
+    <t t-name="account_reconcile_oca.ReconcileMatchWidget" owl="1">
+        <View t-props="listViewProperties" />
+    </t>
     <t t-name="account_reconcile_oca.ReconcileDataWidget" owl="1">
         <table
             class="table table-sm position-relative mb-0 table-striped"
