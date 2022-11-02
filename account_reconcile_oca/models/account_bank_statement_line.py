@@ -96,12 +96,11 @@ class AccountBankStatementLine(models.Model):
             total_amount, precision_digits=self.currency_id.decimal_places
         ):
             if suspense_line:
-                suspense_amount = suspense_line["amount"] - total_amount
                 suspense_line.update(
                     {
-                        "amount": -suspense_amount,
-                        "credit": -suspense_amount if suspense_amount < 0 else 0.0,
-                        "debit": suspense_amount if suspense_amount > 0 else 0.0,
+                        "amount": -total_amount,
+                        "credit": total_amount if total_amount > 0 else 0.0,
+                        "debit": -total_amount if total_amount < 0 else 0.0,
                     }
                 )
             else:
@@ -174,10 +173,12 @@ class AccountBankStatementLine(models.Model):
 
         amount = line.debit - line.credit
         if max_amount:
-            if -amount > max_amount > 0:
-                amount = -max_amount
-            if -amount < max_amount < 0:
-                amount = -max_amount
+            if amount > max_amount > 0:
+                amount = max_amount
+            if amount < max_amount < 0:
+                amount = max_amount
+        if is_counterpart:
+            amount = -amount
         vals = {
             "reference": "account.move.line;%s" % line.id,
             "id": line.id,
