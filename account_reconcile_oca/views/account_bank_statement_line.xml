@@ -99,6 +99,7 @@
                         <field
                             name="add_account_move_line_id"
                             widget="account_reconcile_oca_match"
+                            context="{'search_default_partner_id': partner_id, 'tree_view_ref': 'account_reconcile_oca.account_move_line_tree_reconcile_view', 'search_view_ref': 'account_reconcile_oca.account_move_line_search_reconcile_view'}"
                         />
                     </page>
                     <page name="manual" string="Manual operation">

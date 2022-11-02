@@ -1,6 +1,5 @@
 /** @odoo-module **/
 
-import {Domain} from "@web/core/domain";
 import {View} from "@web/views/view";
 import {registry} from "@web/core/registry";
 
@@ -25,11 +24,9 @@ export class AccountReconcileMatchWidget extends Component {
             },
             resModel: this.props.record.fields[this.props.name].relation,
             searchMenuTypes: ["filter"],
-            domain: new Domain(this.props.record.fields[this.props.name].domain).toList(
-                this.props.record.evalContext
-            ),
+            domain: this.props.record.getFieldDomain(this.props.name).toList(),
             context: {
-                ...this.props.record.fields[this.props.name].context,
+                ...this.props.record.getFieldContext(this.props.name),
             },
             // Disables de selector
             allowSelectors: false,
