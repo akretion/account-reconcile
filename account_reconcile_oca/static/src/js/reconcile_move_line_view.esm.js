@@ -6,9 +6,7 @@ import {registry} from "@web/core/registry";
 
 export class ReconcileMoveLineController extends ListController {
     async openRecord(record) {
-        console.log(this.props.parentField, record.resId);
         var data = {};
-        console.log(record);
         data[this.props.parentField] = [record.resId, record.display_name];
         this.props.parentRecord.update(data);
     }

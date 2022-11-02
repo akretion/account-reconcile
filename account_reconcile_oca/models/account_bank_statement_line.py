@@ -36,10 +36,6 @@ class AccountBankStatementLine(models.Model):
             ("amount_residual", "!=", 0),
             ("account_id.reconcile", "=", True),
         ],
-        context={
-            "tree_view_ref": "account_reconcile_oca.account_move_line_tree_reconcile_view",
-            "search_view_ref": "account_reconcile_oca.account_move_line_search_reconcile_view",
-        },
     )
     reconcile_auxiliary_id = fields.Integer(
         store=False,
@@ -122,24 +118,39 @@ class AccountBankStatementLine(models.Model):
             new_data.append(suspense_line)
         return new_data
 
+    def _check_line_changed(self, line):
+        return (
+            not float_is_zero(
+                self.manual_amount - line["amount"],
+                precision_digits=self.currency_id.decimal_places,
+            )
+            or self.manual_account_id.id != line["account_id"][0]
+            or self.manual_name != line["name"]
+        )
+
     @api.onchange("manual_account_id", "manual_name", "manual_amount")
     def _onchange_manual_reconcile_vals(self):
         self.ensure_one()
         data = self.reconcile_data_info.get("data", [])
         for line in data:
             if line["reference"] == self.manual_reference:
-                line.update(
-                    {
-                        "name": self.manual_name,
-                        "account_id": self.manual_account_id.name_get()[0],
-                        "amount": self.manual_amount,
-                        "credit": -self.manual_amount
-                        if self.manual_amount < 0
-                        else 0.0,
-                        "debit": self.manual_amount if self.manual_amount > 0 else 0.0,
-                        "kind": line["kind"] if line["kind"] != "suspense" else "other",
-                    }
-                )
+                if self._check_line_changed(line):
+                    line.update(
+                        {
+                            "name": self.manual_name,
+                            "account_id": self.manual_account_id.name_get()[0],
+                            "amount": self.manual_amount,
+                            "credit": -self.manual_amount
+                            if self.manual_amount < 0
+                            else 0.0,
+                            "debit": self.manual_amount
+                            if self.manual_amount > 0
+                            else 0.0,
+                            "kind": line["kind"]
+                            if line["kind"] != "suspense"
+                            else "other",
+                        }
+                    )
         data = self._recompute_suspense_line(data)
         self.reconcile_data_info = {"data": data}
 

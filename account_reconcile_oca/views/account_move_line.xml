@@ -11,6 +11,7 @@
             <tree js_class="reconcile_move_line">
                 <field name="date" />
                 <field name="move_id" />
+                <field name="partner_id" />
                 <field name="name" />
                 <field name="amount_residual" />
             </tree>
