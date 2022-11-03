@@ -60,6 +60,7 @@
                 <th>Label</th>
                 <th class="text-end">Debit</th>
                 <th class="text-end">Credit</th>
+                <th />
             </thead>
             <tbody>
                 <t
@@ -77,20 +78,61 @@
                                 t-if="reconcile_line.partner_id"
                             />
                         </td>
-                        <td
-                            t-esc="reconcile_line.date_format"
-                        /> <!-- TODO: Fix localization format... -->
+                        <td t-esc="reconcile_line.date_format" />
                         <td>
                             <span
                                 t-esc="reconcile_line.name"
                                 t-if="reconcile_line.name"
                             />
                         </td>
-                        <td class="text-end" t-esc="reconcile_line.debit_format" />
-                        <td class="text-end" t-esc="reconcile_line.credit_format" />
+                        <td
+                            class="text-end o_field_account_reconcile_oca_balance_float"
+                        >
+                            <div
+                                t-esc="reconcile_line.debit_format"
+                                t-if="reconcile_line.amount &gt; 0"
+                            />
+                            <div
+                                class="o_field_account_reconcile_oca_balance_original_float"
+                                t-esc="reconcile_line.original_amount_format"
+                                t-if="reconcile_line.amount &gt; 0 and reconcile_line.original_amount"
+                            />
+                        </td>
+                        <td
+                            class="text-end o_field_account_reconcile_oca_balance_float"
+                        >
+                            <div
+                                t-esc="reconcile_line.credit_format"
+                                t-if="reconcile_line.amount &lt; 0"
+                            />
+                            <div
+                                class="o_field_account_reconcile_oca_balance_original_float"
+                                t-esc="reconcile_line.original_amount_format"
+                                t-if="reconcile_line.amount &lt; 0  and reconcile_line.original_amount"
+                            />
+                        </td>
+                        <td>
+                            <button
+                                class="btn fa fa-trash-o"
+                                role="button"
+                                t-on-click="(ev) => this.onTrashLine(ev, reconcile_line)"
+                                t-if="reconcile_line.kind == 'other'"
+                            />
+                        </td>
                     </tr>
                 </t>
             </tbody>
         </table>
+    </t>
+    <t
+        t-name="account_reconcile_oca.ReconcileMoveLineController"
+        t-inherit="web.ListView"
+        t-inherit-mode="primary"
+        owl="1"
+    >
+        <xpath expr="//t[@list='model.root']" position="attributes">
+            <attribute name="parentRecord">props.parentRecord</attribute>
+            <attribute name="parentField">props.parentField</attribute>
+        </xpath>
     </t>
 </templates>
