@@ -31,11 +31,30 @@ export class AccountReconcileDataWidget extends Component {
                     currency: session.get_currency(data[line].currency_id),
                 }
             );
+            if (data[line].original_amount) {
+                data[line].original_amount_format = fieldUtils.format.monetary(
+                    data[line].original_amount,
+                    undefined,
+                    {
+                        currency: session.get_currency(data[line].currency_id),
+                    }
+                );
+            }
             data[line].date_format = fieldUtils.format.date(
                 fieldUtils.parse.date(data[line].date, undefined, {isUTC: true})
             );
         }
         return data;
+    }
+    onTrashLine(ev, line) {
+        this.props.record.update({
+            manual_reference: line.reference,
+            manual_account_id: line.account_id,
+            manual_name: line.name,
+            manual_amount: line.amount,
+            manual_partner_id: line.partner_id,
+            manual_delete: true,
+        });
     }
     selectReconcileLine(ev, line) {
         this.props.record.update({

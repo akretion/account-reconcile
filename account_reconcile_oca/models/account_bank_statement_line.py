@@ -30,6 +30,11 @@ class AccountBankStatementLine(models.Model):
         default=False,
         prefetch=False,
     )
+    manual_delete = fields.Boolean(
+        store=False,
+        default=False,
+        prefetch=False,
+    )
     manual_name = fields.Char(store=False, default=False, prefetch=False)
     manual_amount = fields.Monetary(store=False, default=False, prefetch=False)
     add_account_move_line_id = fields.Many2one(
@@ -82,14 +87,17 @@ class AccountBankStatementLine(models.Model):
                         self.add_account_move_line_id, "other", True, pending_amount
                     )
                 )
-            self.reconcile_data_info = {"data": self._recompute_suspense_line(new_data)}
+            self.reconcile_data_info = self._recompute_suspense_line(new_data)
             self.add_account_move_line_id = False
 
     def _recompute_suspense_line(self, data):
         total_amount = 0
         new_data = []
         suspense_line = False
+        counterparts = []
         for line in data:
+            if line.get("counterpart_line_id"):
+                counterparts.append(line["counterpart_line_id"])
             if line["kind"] != "suspense":
                 new_data.append(line)
                 total_amount += line["amount"]
@@ -124,7 +132,7 @@ class AccountBankStatementLine(models.Model):
                 }
                 self.reconcile_auxiliary_id += 1
             new_data.append(suspense_line)
-        return new_data
+        return {"data": new_data, "counterparts": counterparts}
 
     def _check_line_changed(self, line):
         return (
@@ -136,13 +144,25 @@ class AccountBankStatementLine(models.Model):
             or self.manual_name != line["name"]
         )
 
-    @api.onchange("manual_account_id", "manual_name", "manual_amount")
+    @api.onchange("manual_account_id", "manual_name", "manual_amount", "manual_delete")
     def _onchange_manual_reconcile_vals(self):
         self.ensure_one()
         data = self.reconcile_data_info.get("data", [])
+        new_data = []
         for line in data:
             if line["reference"] == self.manual_reference:
-                if self._check_line_changed(line):
+                if self.manual_delete:
+                    self.update(
+                        {
+                            "manual_delete": False,
+                            "manual_reference": False,
+                            "manual_account_id": False,
+                            "manual_amount": False,
+                            "manual_name": False,
+                        }
+                    )
+                    continue
+                elif self._check_line_changed(line):
                     line.update(
                         {
                             "name": self.manual_name,
@@ -159,8 +179,8 @@ class AccountBankStatementLine(models.Model):
                             else "other",
                         }
                     )
-        data = self._recompute_suspense_line(data)
-        self.reconcile_data_info = {"data": data}
+            new_data.append(line)
+        self.reconcile_data_info = self._recompute_suspense_line(new_data)
 
     @api.depends("reconcile_data")
     def _compute_reconcile_data_info(self):
@@ -176,13 +196,10 @@ class AccountBankStatementLine(models.Model):
 
     def _default_reconcile_data(self):
         liquidity_lines, suspense_lines, other_lines = self._seek_for_lines()
-        return {
-            "data": [
-                self._get_reconcile_line(line, "liquidity") for line in liquidity_lines
-            ]
+        return self._recompute_suspense_line(
+            [self._get_reconcile_line(line, "liquidity") for line in liquidity_lines]
             + [self._get_reconcile_line(line, "other") for line in other_lines]
-            + [self._get_reconcile_line(line, "suspense") for line in suspense_lines]
-        }
+        )
 
     def clean_reconcile(self):
         self.reconcile_data_info = self._default_reconcile_data()
@@ -191,6 +208,7 @@ class AccountBankStatementLine(models.Model):
     def _get_reconcile_line(self, line, kind, is_counterpart=False, max_amount=False):
 
         amount = line.debit - line.credit
+        original_amount = line.debit - line.credit
         if max_amount:
             if amount > max_amount > 0:
                 amount = max_amount
@@ -198,6 +216,7 @@ class AccountBankStatementLine(models.Model):
                 amount = max_amount
         if is_counterpart:
             amount = -amount
+            original_amount = -original_amount
         vals = {
             "reference": "account.move.line;%s" % line.id,
             "id": line.id,
@@ -211,6 +230,10 @@ class AccountBankStatementLine(models.Model):
             "currency_id": line.currency_id.id,
             "kind": kind,
         }
+        if not float_is_zero(
+            amount - original_amount, precision_digits=self.currency_id.decimal_places
+        ):
+            vals["original_amount"] = abs(original_amount)
         if is_counterpart:
             vals["counterpart_line_id"] = line.id
         return vals
