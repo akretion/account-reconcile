@@ -5,9 +5,11 @@
     -webkit-flex-flow: row wrap;
     flex-flow: row wrap;
     height: 100%;
-
     .o_kanban_renderer.o_kanban_ungrouped .o_kanban_record {
         margin: 0 0 0;
+        &.o_kanban_record_reconcile_oca_selected > div {
+            border-right: thick solid $o-success;
+        }
     }
     .o_account_reconcile_oca_selector {
         width: 30%;

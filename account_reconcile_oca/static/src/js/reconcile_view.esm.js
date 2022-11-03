@@ -10,6 +10,7 @@ export const reconcileView = {
     Renderer: ReconcileRenderer,
     Controller: ReconcileController,
     buttonTemplate: "account_reconcile.ReconcileView.Buttons",
+    searchMenuTypes: ["filter"],
 };
 
 registry.category("views").add("reconcile", reconcileView);

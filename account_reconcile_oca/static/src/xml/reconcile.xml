@@ -13,6 +13,11 @@
                 separator=" "
             />
         </xpath>
+        <!-- Group by selector disabled on the view, so we need to find the one without group,
+        then we pass to the component the selected record -->
+        <xpath expr="//KanbanRecord[not(@group)]" position="attributes">
+            <attribute name="selectedRecordId">props.selectedRecordId</attribute>
+        </xpath>
     </t>
     <t
         t-name="account_reconcile_oca.ReconcileController"
@@ -20,6 +25,10 @@
         t-inherit-mode="primary"
         owl="1"
     >
+        <!-- we pass to the component the selected record -->
+        <xpath expr="//Layout/t[2]" position="attributes">
+            <attribute name="selectedRecordId">state.selectedRecordId</attribute>
+        </xpath>
         <xpath expr="//Layout" position="attributes">
             <attribute
                 name="className"

@@ -24,6 +24,7 @@
             "account_reconcile_oca/static/src/js/reconcile_data_widget.esm.js",
             "account_reconcile_oca/static/src/js/reconcile_move_line_view.esm.js",
             "account_reconcile_oca/static/src/js/reconcile_move_line_widget.esm.js",
+            "account_reconcile_oca/static/src/js/reconcile_kanban_record.esm.js",
             "account_reconcile_oca/static/src/js/reconcile_renderer.esm.js",
             "account_reconcile_oca/static/src/js/reconcile_controller.esm.js",
             "account_reconcile_oca/static/src/js/reconcile_view.esm.js",
