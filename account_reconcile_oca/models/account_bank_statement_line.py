@@ -207,8 +207,9 @@ class AccountBankStatementLine(models.Model):
 
     def _get_reconcile_line(self, line, kind, is_counterpart=False, max_amount=False):
 
-        amount = line.debit - line.credit
-        original_amount = line.debit - line.credit
+        original_amount = amount = line.debit - line.credit
+        if is_counterpart:
+            original_amount = amount = line.amount_residual
         if max_amount:
             if amount > max_amount > 0:
                 amount = max_amount
