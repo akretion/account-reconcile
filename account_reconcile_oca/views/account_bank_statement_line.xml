@@ -85,20 +85,24 @@
         <field name="priority">99</field>
         <field name="arch" type="xml">
             <form>
-                <button
-                    name="reconcile_bank_line"
-                    type="object"
-                    string="Reconcile"
-                    class="btn btn-success"
-                    attrs="{'invisible': [('is_reconciled', '=', True)]}"
-                />
-                <button
-                    name="clean_reconcile"
-                    type="object"
-                    string="Clean"
-                    class="btn"
-                    attrs="{'invisible': [('is_reconciled', '=', True)]}"
-                />
+                <div class="o_form_statusbar o_account_reconcile_oca_statusbar">
+                    <div class="o_statusbar_buttons">
+                    <button
+                            name="reconcile_bank_line"
+                            type="object"
+                            string="Reconcile"
+                            class="btn btn-primary"
+                            attrs="{'invisible': [('is_reconciled', '=', True)]}"
+                        />
+                        <button
+                            name="clean_reconcile"
+                            type="object"
+                            string="Clean"
+                            class="btn btn-secondary"
+                            attrs="{'invisible': [('is_reconciled', '=', True)]}"
+                        />
+                    </div>
+                </div>
                     <field name="name" invisible="1" />
                     <field name="partner_id" invisible="1" />
                     <field name="company_id" invisible="1" />
