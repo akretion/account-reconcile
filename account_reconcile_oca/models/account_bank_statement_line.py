@@ -196,6 +196,23 @@ class AccountBankStatementLine(models.Model):
 
     def _default_reconcile_data(self):
         liquidity_lines, suspense_lines, other_lines = self._seek_for_lines()
+        res = (
+            self.env["account.reconcile.model"]
+            .search([("rule_type", "=", "invoice_matching")])
+            ._apply_rules(self, self._retrieve_partner())
+        )
+        if res:
+            data = [
+                self._get_reconcile_line(line, "liquidity") for line in liquidity_lines
+            ]
+            amount = self.amount
+            for line in res.get("amls", []):
+                line_data = self._get_reconcile_line(
+                    line, "other", is_counterpart=True, max_amount=amount
+                )
+                amount -= line_data.get("amount")
+                data.append(line_data)
+            return self._recompute_suspense_line(data)
         return self._recompute_suspense_line(
             [self._get_reconcile_line(line, "liquidity") for line in liquidity_lines]
             + [self._get_reconcile_line(line, "other") for line in other_lines]
