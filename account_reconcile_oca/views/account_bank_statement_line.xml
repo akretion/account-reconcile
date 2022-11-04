@@ -65,6 +65,7 @@
                         domain="[('journal_id', '=', journal_id)]"
                     />
                     <field name="journal_id" invisible="1" />
+                    <field name="" invisible="1" />
                 </group>
                 <footer>
                     <button
@@ -115,7 +116,14 @@
                     widget="account_reconcile_oca_data"
                     class="w-100"
                 />
-
+                <div>
+                    <field
+                        name="manual_model_id"
+                        widget="selection_badge_uncheck"
+                        nolabel="1"
+                        attrs="{'invisible': [('is_reconciled', '=', True)]}"
+                    />
+                </div>
                 <notebook>
                     <page
                         name="reconcile_line"

@@ -30,6 +30,14 @@ class AccountBankStatementLine(models.Model):
         default=False,
         prefetch=False,
     )
+    manual_model_id = fields.Many2one(
+        "account.reconcile.model",
+        check_company=True,
+        store=False,
+        default=False,
+        prefetch=False,
+        domain=[("rule_type", "=", "writeoff_button")],
+    )
     manual_delete = fields.Boolean(
         store=False,
         default=False,
@@ -66,6 +74,22 @@ class AccountBankStatementLine(models.Model):
         )
         action["context"] = self.env.context
         return action
+
+    @api.onchange("manual_model_id")
+    def _onchange_manual_model_id(self):
+        if self.manual_model_id:
+            data = []
+            for line in self.reconcile_data_info.get("data", []):
+                if line.get("kind") == "liquidity":
+                    data.append(line)
+            self.reconcile_data_info = self._recompute_suspense_line(
+                self._reconcile_data_by_model(data, self.manual_model_id)
+            )
+        else:
+            # Refreshing data
+            self.reconcile_data_info = self.browse(
+                self.id.origin
+            )._default_reconcile_data()
 
     @api.onchange("add_account_move_line_id")
     def _onchange_add_account_move_line_id(self):

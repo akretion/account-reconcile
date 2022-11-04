@@ -23,6 +23,7 @@
         "web.assets_backend": [
             "account_reconcile_oca/static/src/js/reconcile_data_widget.esm.js",
             "account_reconcile_oca/static/src/js/reconcile_chatter_field.esm.js",
+            "account_reconcile_oca/static/src/js/selection_badge_uncheck.esm.js",
             "account_reconcile_oca/static/src/js/reconcile_move_line_view.esm.js",
             "account_reconcile_oca/static/src/js/reconcile_move_line_widget.esm.js",
             "account_reconcile_oca/static/src/js/reconcile_kanban_record.esm.js",
