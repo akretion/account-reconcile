@@ -194,17 +194,53 @@ class AccountBankStatementLine(models.Model):
         for record in self:
             record.reconcile_data = record.reconcile_data_info
 
+    def _reconcile_data_by_model(self, data, reconcile_model):
+        new_data = []
+        liquidity_amount = 0.0
+        for line_data in data:
+            if line_data["kind"] != "liquidity":
+                continue
+            new_data.append(line_data)
+            liquidity_amount += line_data["amount"]
+        for line in reconcile_model._apply_lines_for_bank_widget(
+            -liquidity_amount, self._retrieve_partner(), self
+        ):
+            amount = line["amount_currency"]
+            new_line = {
+                "reference": "reconcile_auxiliary;%s" % self.reconcile_auxiliary_id,
+                "id": False,
+                "amount": amount,
+                "debit": amount if amount > 0 else 0.0,
+                "credit": -amount if amount < 0 else 0.0,
+                "kind": "other",
+                "account_id": self.env["account.account"]
+                .browse(line["account_id"])
+                .name_get()[0],
+                "date": fields.Date.to_string(self.date),
+                "name": line.get("name"),
+                "currency_id": line.get("currency_id"),
+            }
+            self.reconcile_auxiliary_id += 1
+            if line["partner_id"]:
+                new_line["partner_id"] = (
+                    self.env["res.partner"].browse(line["partner_id"]).name_get()[0]
+                )
+            new_data.append(new_line)
+        return new_data
+
     def _default_reconcile_data(self):
         liquidity_lines, suspense_lines, other_lines = self._seek_for_lines()
+        data = [self._get_reconcile_line(line, "liquidity") for line in liquidity_lines]
         res = (
             self.env["account.reconcile.model"]
-            .search([("rule_type", "=", "invoice_matching")])
+            .search([("rule_type", "in", ["invoice_matching", "writeoff_suggestion"])])
             ._apply_rules(self, self._retrieve_partner())
         )
-        if res:
-            data = [
-                self._get_reconcile_line(line, "liquidity") for line in liquidity_lines
-            ]
+        if res and res.get("status", "") == "write_off":
+            return self._recompute_suspense_line(
+                self._reconcile_data_by_model(data, res["model"])
+            )
+        elif res and res.get("amls"):
             amount = self.amount
             for line in res.get("amls", []):
                 line_data = self._get_reconcile_line(
@@ -214,8 +250,7 @@ class AccountBankStatementLine(models.Model):
                 data.append(line_data)
             return self._recompute_suspense_line(data)
         return self._recompute_suspense_line(
-            [self._get_reconcile_line(line, "liquidity") for line in liquidity_lines]
-            + [self._get_reconcile_line(line, "other") for line in other_lines]
+            data + [self._get_reconcile_line(line, "other") for line in other_lines]
         )
 
     def clean_reconcile(self):
