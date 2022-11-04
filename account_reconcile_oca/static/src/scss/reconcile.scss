@@ -11,7 +11,7 @@
             border-right: thick solid rgba(0, 0, 0, 0);
         }
         &.o_kanban_record_reconcile_oca_selected > div {
-            border-right: thick solid $o-success;
+            border-right: thick solid $o-brand-primary;
         }
     }
     .o_account_reconcile_oca_selector {
@@ -26,6 +26,18 @@
         height: 100%;
     }
     .o_form_view {
+        .o_form_statusbar.o_account_reconcile_oca_statusbar {
+            height: 40px;
+            > .o_statusbar_buttons {
+                height: 100%;
+                > .btn {
+                    margin: 0;
+                    height: 100%;
+                    padding: 10px;
+                    border-radius: 0;
+                }
+            }
+        }
         .o_field_account_reconcile_oca_data {
             .o_field_account_reconcile_oca_balance_float {
                 .o_field_account_reconcile_oca_balance_original_float {
@@ -37,7 +49,7 @@
             display: inline;
         }
         .o_field_account_reconcile_oca_move_line_selected {
-            background-color: rgba($o-success, 0.1);
+            background-color: rgba($o-brand-primary, 0.2);
             color: #000;
         }
     }

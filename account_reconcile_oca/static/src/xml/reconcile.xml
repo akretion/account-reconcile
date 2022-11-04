@@ -43,7 +43,7 @@
         </xpath>
     </t>
     <t t-name="account_reconcile.ReconcileView.Buttons" owl="1">
-        <button t-on-click="onClickNewButton" class="btn btn-success">Create</button>
+        <button t-on-click="onClickNewButton" class="btn btn-primary">Create</button>
     </t>
     <t t-name="account_reconcile_oca.ReconcileMatchWidget" owl="1">
         <View t-props="listViewProperties" />
