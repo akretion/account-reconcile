@@ -18,7 +18,12 @@ export class ReconcileController extends KanbanController {
         const action = await this.orm.call(this.props.resModel, "action_new_line", [], {
             context: this.props.context,
         });
-        this.action.doAction(action);
+        this.action.doAction(action, {
+            onClose: async () => {
+                await this.model.root.load();
+                this.render(true);
+            },
+        });
     }
     get viewReconcileInfo() {
         return {
