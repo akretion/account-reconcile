@@ -124,6 +124,12 @@
             </tbody>
         </table>
     </t>
+    <t t-name="account_reconcile_oca.AccountReconcileChatterWidget" owl="1">
+        <ChatterContainer
+            threadModel="this.props.record.fields[this.props.name].relation"
+            threadId="this.props.value[0]"
+        />
+    </t>
     <t
         t-name="account_reconcile_oca.ReconcileMoveLineController"
         t-inherit="web.ListView"
