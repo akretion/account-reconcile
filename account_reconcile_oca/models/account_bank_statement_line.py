@@ -45,6 +45,7 @@ class AccountBankStatementLine(models.Model):
     )
     manual_name = fields.Char(store=False, default=False, prefetch=False)
     manual_amount = fields.Monetary(store=False, default=False, prefetch=False)
+    manual_reconciled = fields.Boolean(default=False, store=False)
     add_account_move_line_id = fields.Many2one(
         "account.move.line",
         check_company=True,
@@ -64,7 +65,6 @@ class AccountBankStatementLine(models.Model):
     )
 
     def save(self):
-        # TODO: Launch a refresh of data....
         return {"type": "ir.actions.act_window_close"}
 
     @api.model
@@ -280,6 +280,7 @@ class AccountBankStatementLine(models.Model):
     def clean_reconcile(self):
         self.reconcile_data_info = self._default_reconcile_data()
         self.reconcile_data = {}
+        self.manual_reconciled = True
 
     def _get_reconcile_line(self, line, kind, is_counterpart=False, max_amount=False):
 
@@ -352,7 +353,7 @@ class AccountBankStatementLine(models.Model):
         return {
             "move_id": self.move_id.id,
             "account_id": line["account_id"][0],
-            "partner_id": line["partner_id"] and line["partner_id"][0],
+            "partner_id": line.get("partner_id") and line["partner_id"][0],
             "credit": line["credit"],
             "debit": line["debit"],
         }

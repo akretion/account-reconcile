@@ -88,7 +88,7 @@
         <field name="model">account.bank.statement.line</field>
         <field name="priority">99</field>
         <field name="arch" type="xml">
-            <form>
+            <form js_class="reconcile_form">
                 <div class="o_form_statusbar o_account_reconcile_oca_statusbar">
                     <div class="o_statusbar_buttons">
                     <button
@@ -113,6 +113,7 @@
                 <field name="manual_reference" invisible="1" />
                 <field name="manual_delete" invisible="1" />
                 <field name="is_reconciled" invisible="1" />
+                <field name="manual_reconciled" invisible="1" />
                 <field
                     name="reconcile_data_info"
                     nolabel="1"

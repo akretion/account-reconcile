@@ -8,8 +8,10 @@ const {Component, useSubEnv} = owl;
 export class AccountReconcileMatchWidget extends Component {
     setup() {
         // Necessary in order to avoid a loop
+        super.setup(...arguments);
         useSubEnv({
             config: {},
+            parentController: this.env.parentController,
         });
     }
     get listViewProperties() {
