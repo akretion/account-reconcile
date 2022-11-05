@@ -1,5 +1,5 @@
 /** @odoo-module */
-const {useState} = owl;
+const {useState, useSubEnv} = owl;
 import {KanbanController} from "@web/views/kanban/kanban_controller";
 import {View} from "@web/views/view";
 import {useService} from "@web/core/utils/hooks";
@@ -10,6 +10,7 @@ export class ReconcileController extends KanbanController {
         this.state = useState({
             selectedRecordId: null,
         });
+        useSubEnv({parentController: this});
         this.orm = useService("orm");
         this.action = useService("action");
         this.model.addEventListener("update", () => this.selectRecord(), {once: true});

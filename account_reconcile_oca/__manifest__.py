@@ -30,6 +30,7 @@
             "account_reconcile_oca/static/src/js/reconcile_renderer.esm.js",
             "account_reconcile_oca/static/src/js/reconcile_controller.esm.js",
             "account_reconcile_oca/static/src/js/reconcile_view.esm.js",
+            "account_reconcile_oca/static/src/js/reconcile_form_view.esm.js",
             "account_reconcile_oca/static/src/xml/reconcile.xml",
             "account_reconcile_oca/static/src/scss/reconcile.scss",
         ],
