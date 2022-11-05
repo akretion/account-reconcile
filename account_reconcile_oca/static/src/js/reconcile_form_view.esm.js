@@ -3,12 +3,15 @@
 import {FormController} from "@web/views/form/form_controller";
 import {formView} from "@web/views/form/form_view";
 import {registry} from "@web/core/registry";
+import {useService} from "@web/core/utils/hooks";
 import {useViewButtons} from "@web/views/view_button/view_button_hook";
 const {useRef} = owl;
 
 export class ReconcileFormController extends FormController {
     setup() {
         super.setup(...arguments);
+        this.orm = useService("orm");
+        this.effect = useService("effect");
         const rootRef = useRef("root");
         useViewButtons(this.model, rootRef, {
             reload: this.reloadFormController.bind(this),
@@ -26,6 +29,18 @@ export class ReconcileFormController extends FormController {
                 await this.env.parentController.model.root.load();
                 await this.env.parentController.render(true);
                 this.env.parentController.selectRecord();
+                // Showing rainbow man
+                const message = await this.orm.call(
+                    "account.journal",
+                    "get_rainbowman_message",
+                    [[this.model.root.data.journal_id[0]]]
+                );
+                if (message) {
+                    this.effect.add({
+                        message,
+                        type: "rainbow_man",
+                    });
+                }
             }
         }
     }

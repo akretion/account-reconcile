@@ -1,7 +1,7 @@
 # Copyright 2022 CreuBlanca
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-from odoo import models
+from odoo import _, models
 
 
 class AccountJournal(models.Model):
@@ -14,3 +14,9 @@ class AccountJournal(models.Model):
         )
         action["domain"] = [("id", "=", self.to_check_ids().ids)]
         return action
+
+    def get_rainbowman_message(self):
+        self.ensure_one()
+        if self.get_journal_dashboard_datas()["number_to_reconcile"] > 0:
+            return False
+        return _("Well done! Everything has been reconciled")
