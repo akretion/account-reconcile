@@ -214,6 +214,16 @@ class AccountBankStatementLine(models.Model):
             else:
                 record.reconcile_data_info = record._default_reconcile_data()
 
+    def action_show_move(self):
+        self.ensure_one()
+        action = self.env["ir.actions.act_window"]._for_xml_id(
+            "account.action_move_journal_line"
+        )
+        action.update(
+            {"res_id": self.move_id.id, "views": [[False, "form"]], "view_mode": "form"}
+        )
+        return action
+
     def _inverse_reconcile_data_info(self):
         for record in self:
             record.reconcile_data = record.reconcile_data_info
