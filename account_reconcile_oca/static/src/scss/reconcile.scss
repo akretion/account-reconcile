@@ -26,6 +26,9 @@
         height: 100%;
     }
     .o_form_view {
+        .btn-info:not(.dropdown-toggle):not(.dropdown-item) {
+            text-transform: uppercase;
+        }
         .o_form_statusbar.o_account_reconcile_oca_statusbar {
             height: 40px;
             > .o_statusbar_buttons {
