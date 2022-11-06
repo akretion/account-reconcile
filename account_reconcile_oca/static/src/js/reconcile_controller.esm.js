@@ -32,8 +32,7 @@ export class ReconcileController extends KanbanController {
             type: "form",
             context: {
                 ...(this.props.context || {}),
-                form_view_ref:
-                    "account_reconcile_oca.bank_statement_line_form_reconcile_view",
+                form_view_ref: this.props.context.view_ref,
             },
             display: {controlPanel: false},
             mode: this.props.mode || "edit",
