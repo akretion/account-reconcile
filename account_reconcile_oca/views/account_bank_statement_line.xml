@@ -130,6 +130,12 @@
                             class="btn btn-secondary"
                             attrs="{'invisible': [('is_reconciled', '=', True)]}"
                         />
+                        <button
+                            name="action_show_move"
+                            type="object"
+                            string="Show move"
+                            class="btn btn-info"
+                        />
                     </div>
                 </div>
                 <field name="name" invisible="1" />
