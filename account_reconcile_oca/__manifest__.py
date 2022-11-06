@@ -17,6 +17,7 @@
         "views/account_bank_statement_line.xml",
         "views/account_move_line.xml",
         "views/account_journal.xml",
+        "views/account_move.xml",
     ],
     "demo": [],
     "assets": {
