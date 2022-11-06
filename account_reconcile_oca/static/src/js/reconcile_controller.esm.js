@@ -48,7 +48,10 @@ export class ReconcileController extends KanbanController {
                     !modelRecord.data.is_reconciled || modelRecord.data.to_check
             );
             if (records.length === 0) {
-                return;
+                records = this.model.root.records;
+                if (records.length === 0) {
+                    return;
+                }
             }
             resId = records[0].resId;
         } else {
