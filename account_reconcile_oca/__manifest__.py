@@ -19,7 +19,7 @@
         "views/account_journal.xml",
         "views/account_move.xml",
     ],
-    "demo": [],
+    "demo": ["demo/demo.xml"],
     "assets": {
         "web.assets_backend": [
             "account_reconcile_oca/static/src/js/reconcile_data_widget.esm.js",
