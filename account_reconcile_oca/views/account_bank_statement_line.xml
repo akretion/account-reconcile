@@ -133,7 +133,7 @@
                         <button
                             name="action_show_move"
                             type="object"
-                            string="Show move"
+                            string="View move"
                             class="btn btn-info"
                         />
                     </div>
