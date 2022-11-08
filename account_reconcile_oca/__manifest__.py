@@ -20,6 +20,7 @@
         "views/account_move_line.xml",
         "views/account_journal.xml",
         "views/account_move.xml",
+        "views/account_account.xml",
     ],
     "demo": ["demo/demo.xml"],
     "assets": {
