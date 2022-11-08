@@ -146,7 +146,6 @@
                 <field name="manual_reference" invisible="1" />
                 <field name="manual_delete" invisible="1" />
                 <field name="is_reconciled" invisible="1" />
-                <field name="manual_reconciled" invisible="1" />
                 <field
                     name="reconcile_data_info"
                     nolabel="1"

@@ -49,6 +49,7 @@ export class ReconcileController extends KanbanController {
             if (records.length === 0) {
                 records = this.model.root.records;
                 if (records.length === 0) {
+                    this.state.selectedRecordId = false;
                     return;
                 }
             }

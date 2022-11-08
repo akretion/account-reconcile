@@ -6,16 +6,12 @@ from odoo.tools import float_is_zero
 
 
 class AccountBankStatementLine(models.Model):
+    _name = "account.bank.statement.line"
+    _inherit = ["account.bank.statement.line", "account.reconcile.abstract"]
 
-    _inherit = "account.bank.statement.line"
+    reconcile_data_info = fields.Serialized(inverse="_inverse_reconcile_data_info")
 
-    reconcile_data_info = fields.Serialized(
-        compute="_compute_reconcile_data_info",
-        inverse="_inverse_reconcile_data_info",
-        prefetch=False,
-    )
     reconcile_data = fields.Serialized()
-    manual_reference = fields.Char(store=False, default=False, prefetch=False)
     manual_account_id = fields.Many2one(
         "account.account",
         check_company=True,
@@ -45,19 +41,6 @@ class AccountBankStatementLine(models.Model):
     )
     manual_name = fields.Char(store=False, default=False, prefetch=False)
     manual_amount = fields.Monetary(store=False, default=False, prefetch=False)
-    manual_reconciled = fields.Boolean(default=False, store=False)
-    add_account_move_line_id = fields.Many2one(
-        "account.move.line",
-        check_company=True,
-        store=False,
-        default=False,
-        prefetch=False,
-        domain=[
-            ("parent_state", "=", "posted"),
-            ("amount_residual", "!=", 0),
-            ("account_id.reconcile", "=", True),
-        ],
-    )
     reconcile_auxiliary_id = fields.Integer(
         store=False,
         default=1,
@@ -166,9 +149,19 @@ class AccountBankStatementLine(models.Model):
             )
             or self.manual_account_id.id != line["account_id"][0]
             or self.manual_name != line["name"]
+            or (
+                self.manual_partner_id and self.manual_partner_id.name_get()[0] or False
+            )
+            != line["partner_id"]
         )
 
-    @api.onchange("manual_account_id", "manual_name", "manual_amount", "manual_delete")
+    @api.onchange(
+        "manual_account_id",
+        "manual_partner_id",
+        "manual_name",
+        "manual_amount",
+        "manual_delete",
+    )
     def _onchange_manual_reconcile_vals(self):
         self.ensure_one()
         data = self.reconcile_data_info.get("data", [])
@@ -187,9 +180,13 @@ class AccountBankStatementLine(models.Model):
                     )
                     continue
                 elif self._check_line_changed(line):
+
                     line.update(
                         {
                             "name": self.manual_name,
+                            "partner_id": self.manual_partner_id
+                            and self.manual_partner_id.name_get()[0]
+                            or False,
                             "account_id": self.manual_account_id.name_get()[0],
                             "amount": self.manual_amount,
                             "credit": -self.manual_amount
@@ -290,41 +287,6 @@ class AccountBankStatementLine(models.Model):
     def clean_reconcile(self):
         self.reconcile_data_info = self._default_reconcile_data()
         self.reconcile_data = {}
-        self.manual_reconciled = True
-
-    def _get_reconcile_line(self, line, kind, is_counterpart=False, max_amount=False):
-
-        original_amount = amount = line.debit - line.credit
-        if is_counterpart:
-            original_amount = amount = line.amount_residual
-        if max_amount:
-            if amount > max_amount > 0:
-                amount = max_amount
-            if amount < max_amount < 0:
-                amount = max_amount
-        if is_counterpart:
-            amount = -amount
-            original_amount = -original_amount
-        vals = {
-            "reference": "account.move.line;%s" % line.id,
-            "id": line.id,
-            "account_id": line.account_id.name_get()[0],
-            "partner_id": line.partner_id and line.partner_id.name_get()[0] or False,
-            "date": fields.Date.to_string(line.date),
-            "name": line.name,
-            "debit": amount if amount > 0 else 0.0,
-            "credit": -amount if amount < 0 else 0.0,
-            "amount": amount,
-            "currency_id": line.currency_id.id,
-            "kind": kind,
-        }
-        if not float_is_zero(
-            amount - original_amount, precision_digits=self.currency_id.decimal_places
-        ):
-            vals["original_amount"] = abs(original_amount)
-        if is_counterpart:
-            vals["counterpart_line_id"] = line.id
-        return vals
 
     def reconcile_bank_line(self):
         self.ensure_one()
