@@ -11,7 +11,6 @@ export class ReconcileFormController extends FormController {
     setup() {
         super.setup(...arguments);
         this.orm = useService("orm");
-        this.effect = useService("effect");
         const rootRef = useRef("root");
         useViewButtons(this.model, rootRef, {
             reload: this.reloadFormController.bind(this),
@@ -25,10 +24,6 @@ export class ReconcileFormController extends FormController {
         if (!is_reconciled && this.model.root.data.is_reconciled) {
             // This only happens when we press the reconcile button
             if (this.env.parentController) {
-                // Refreshing
-                await this.env.parentController.model.root.load();
-                await this.env.parentController.render(true);
-                this.env.parentController.selectRecord();
                 // Showing rainbow man
                 const message = await this.orm.call(
                     "account.journal",
@@ -36,11 +31,12 @@ export class ReconcileFormController extends FormController {
                     [[this.model.root.data.journal_id[0]]]
                 );
                 if (message) {
-                    this.effect.add({
-                        message,
-                        type: "rainbow_man",
-                    });
+                    this.env.parentController.setRainbowMan(message);
                 }
+                // Refreshing
+                await this.env.parentController.model.root.load();
+                await this.env.parentController.render(true);
+                this.env.parentController.selectRecord();
             }
         }
     }

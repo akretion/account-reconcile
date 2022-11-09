@@ -11,6 +11,7 @@ export class ReconcileController extends KanbanController {
             selectedRecordId: null,
         });
         useSubEnv({parentController: this});
+        this.effect = useService("effect");
         this.orm = useService("orm");
         this.action = useService("action");
         this.model.addEventListener("update", () => this.selectRecord(), {once: true});
@@ -24,6 +25,12 @@ export class ReconcileController extends KanbanController {
                 await this.model.root.load();
                 this.render(true);
             },
+        });
+    }
+    async setRainbowMan(message) {
+        this.effect.add({
+            message,
+            type: "rainbow_man",
         });
     }
     get viewReconcileInfo() {
