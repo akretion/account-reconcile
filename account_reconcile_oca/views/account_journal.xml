@@ -40,6 +40,16 @@
                     </div>
                 </t>
             </xpath>
+
+            <xpath expr="//div[@id='card_action_view_menus']" position="after">
+                <div>
+                    <a
+                        role="menuitem"
+                        type="action"
+                        name="%(account_reconcile_oca.action_bank_statement_line_reconcile_all)s"
+                    >Transactions</a>
+                </div>
+            </xpath>
         </field>
     </record>
 </odoo>

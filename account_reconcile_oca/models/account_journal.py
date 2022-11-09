@@ -20,3 +20,8 @@ class AccountJournal(models.Model):
         if self.get_journal_dashboard_datas()["number_to_reconcile"] > 0:
             return False
         return _("Well done! Everything has been reconciled")
+
+    def create_cash_statement(self):
+        return self.env["ir.actions.act_window"]._for_xml_id(
+            "account_reconcile_oca.action_bank_statement_line_reconcile"
+        )
