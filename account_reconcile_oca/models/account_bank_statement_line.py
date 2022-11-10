@@ -10,7 +10,7 @@ class AccountBankStatementLine(models.Model):
     _inherit = ["account.bank.statement.line", "account.reconcile.abstract"]
 
     reconcile_data_info = fields.Serialized(inverse="_inverse_reconcile_data_info")
-
+    company_id = fields.Many2one(related="journal_id.company_id")
     reconcile_data = fields.Serialized()
     manual_account_id = fields.Many2one(
         "account.account",

@@ -41,7 +41,8 @@ class AccountAccountReconcile(models.Model):
                 aml.partner_id,
                 a.id as account_id,
                 FALSE as is_reconciled,
-                aml.currency_id as currency_id
+                aml.currency_id as currency_id,
+                a.company_id
         """
 
     def _from(self):
@@ -62,7 +63,7 @@ class AccountAccountReconcile(models.Model):
     def _groupby(self):
         return """
             GROUP BY
-                a.id, aml.partner_id, aml.currency_id
+                a.id, aml.partner_id, aml.currency_id, a.company_id
         """
 
     def _having(self):

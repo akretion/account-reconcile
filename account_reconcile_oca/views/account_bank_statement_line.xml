@@ -146,6 +146,7 @@
                 <field name="manual_reference" invisible="1" />
                 <field name="manual_delete" invisible="1" />
                 <field name="is_reconciled" invisible="1" />
+                <field name="company_id" invisible="1" />
                 <field
                     name="reconcile_data_info"
                     nolabel="1"
@@ -169,6 +170,7 @@
                         <field
                             name="add_account_move_line_id"
                             widget="account_reconcile_oca_match"
+                            domain="[('parent_state', '=', 'posted'),('amount_residual', '!=', 0),('account_id.reconcile', '=', True), ('company_id', '=', company_id)]"
                             context="{'search_default_partner_id': partner_id, 'tree_view_ref': 'account_reconcile_oca.account_move_line_tree_reconcile_view', 'search_view_ref': 'account_reconcile_oca.account_move_line_search_reconcile_view'}"
                         />
                     </page>
