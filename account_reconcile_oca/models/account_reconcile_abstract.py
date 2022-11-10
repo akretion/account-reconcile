@@ -13,17 +13,13 @@ class AccountReconcileAbstract(models.AbstractModel):
         compute="_compute_reconcile_data_info",
         prefetch=False,
     )
+    company_id = fields.Many2one("res.company")
     add_account_move_line_id = fields.Many2one(
         "account.move.line",
         check_company=True,
         store=False,
         default=False,
         prefetch=False,
-        domain=[
-            ("parent_state", "=", "posted"),
-            ("amount_residual", "!=", 0),
-            ("account_id.reconcile", "=", True),
-        ],
     )
     manual_reference = fields.Char(store=False, default=False, prefetch=False)
 
