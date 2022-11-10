@@ -155,14 +155,8 @@ class AccountBankStatementLine(models.Model):
             != line["partner_id"]
         )
 
-    @api.onchange(
-        "manual_account_id",
-        "manual_partner_id",
-        "manual_name",
-        "manual_amount",
-        "manual_delete",
-    )
-    def _onchange_manual_reconcile_vals(self):
+    @api.onchange("manual_reference", "manual_delete")
+    def _onchange_manual_reconcile_reference(self):
         self.ensure_one()
         data = self.reconcile_data_info.get("data", [])
         new_data = []
@@ -176,11 +170,33 @@ class AccountBankStatementLine(models.Model):
                             "manual_account_id": False,
                             "manual_amount": False,
                             "manual_name": False,
+                            "manual_partner_id": False,
                         }
                     )
                     continue
-                elif self._check_line_changed(line):
+                else:
+                    self.manual_account_id = line["account_id"][0]
+                    self.manual_amount = line["amount"]
+                    self.manual_name = line["name"]
+                    self.manual_partner_id = (
+                        line["partner_id"] and line["partner_id"][0]
+                    )
+            new_data.append(line)
+        self.reconcile_data_info = self._recompute_suspense_line(new_data)
 
+    @api.onchange(
+        "manual_account_id",
+        "manual_partner_id",
+        "manual_name",
+        "manual_amount",
+    )
+    def _onchange_manual_reconcile_vals(self):
+        self.ensure_one()
+        data = self.reconcile_data_info.get("data", [])
+        new_data = []
+        for line in data:
+            if line["reference"] == self.manual_reference:
+                if self._check_line_changed(line):
                     line.update(
                         {
                             "name": self.manual_name,
