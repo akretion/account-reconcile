@@ -26,7 +26,9 @@ class AccountReconcileAbstract(models.AbstractModel):
     def _get_reconcile_line(self, line, kind, is_counterpart=False, max_amount=False):
         original_amount = amount = line.debit - line.credit
         if is_counterpart:
-            original_amount = amount = line.amount_residual
+            original_amount = amount = (
+                line.amount_residual_currency or line.amount_residual
+            )
         if max_amount:
             if amount > max_amount > 0:
                 amount = max_amount
