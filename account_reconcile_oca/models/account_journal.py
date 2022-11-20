@@ -1,11 +1,17 @@
 # Copyright 2022 CreuBlanca
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-from odoo import _, models
+from odoo import _, fields, models
 
 
 class AccountJournal(models.Model):
     _inherit = "account.journal"
+
+    reconcile_mode = fields.Selection(
+        [("edit", "Edit Move"), ("keep", "Keep Suspense Accounts")],
+        default="edit",
+        required=True,
+    )
 
     def action_open_reconcile_to_check(self):
         self.ensure_one()

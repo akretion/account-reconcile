@@ -1,7 +1,10 @@
 # Copyright 2022 CreuBlanca
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-from odoo import api, fields, models
+from collections import defaultdict
+
+from odoo import Command, _, api, fields, models
+from odoo.exceptions import UserError
 from odoo.tools import float_is_zero
 
 
@@ -302,11 +305,14 @@ class AccountBankStatementLine(models.Model):
 
     def clean_reconcile(self):
         self.reconcile_data_info = self._default_reconcile_data()
-        self.reconcile_data = {}
 
     def reconcile_bank_line(self):
         self.ensure_one()
-        self.reconcile_data = self.reconcile_data_info
+        return getattr(
+            self, "_reconcile_bank_line_%s" % self.journal_id.reconcile_mode
+        )()
+
+    def _reconcile_bank_line_edit(self):
         _liquidity_lines, suspense_lines, other_lines = self._seek_for_lines()
         lines_to_remove = [(2, line.id) for line in suspense_lines + other_lines]
 
@@ -337,9 +343,73 @@ class AccountBankStatementLine(models.Model):
                         + line
                     ).reconcile()
 
-    def _reconcile_move_line_vals(self, line):
+    def _reconcile_bank_line_keep_move_vals(self):
         return {
-            "move_id": self.move_id.id,
+            "journal_id": self.journal_id.id,
+        }
+
+    def _reconcile_bank_line_keep(self):
+        move = (
+            self.env["account.move"]
+            .with_context(skip_invoice_sync=True)
+            .create(self._reconcile_bank_line_keep_move_vals())
+        )
+        _liquidity_lines, suspense_lines, other_lines = self._seek_for_lines()
+        container = {"records": move, "self": move}
+        to_reconcile = defaultdict(lambda: self.env["account.move.line"])
+        with move._check_balanced(container):
+            for line in suspense_lines | other_lines:
+                to_reconcile[line.account_id.id] |= line
+                line_data = line.with_context(
+                    active_test=False,
+                    include_business_fields=True,
+                ).copy_data({"move_id": move.id})[0]
+                to_reconcile[line.account_id.id] |= (
+                    self.env["account.move.line"]
+                    .with_context(check_move_validity=False, skip_invoice_sync=True)
+                    .create(line_data)
+                )
+            move.write(
+                {
+                    "line_ids": [
+                        Command.update(
+                            line.id,
+                            {
+                                "balance": -line.balance,
+                                "amount_currency": -line.amount_currency,
+                            },
+                        )
+                        for line in move.line_ids
+                        if line.move_id.move_type == "entry"
+                        or line.display_type == "cogs"
+                    ]
+                }
+            )
+            for line_vals in self.reconcile_data_info["data"]:
+                if line_vals["kind"] == "liquidity":
+                    continue
+                if line_vals["kind"] == "suspense":
+                    raise UserError(_("No supense lines are allowed when reconciling"))
+                line = (
+                    self.env["account.move.line"]
+                    .with_context(check_move_validity=False, skip_invoice_sync=True)
+                    .create(self._reconcile_move_line_vals(line_vals, move.id))
+                )
+                if line_vals.get("counterpart_line_id") and line.account_id.reconcile:
+                    to_reconcile[line.account_id.id] |= (
+                        self.env["account.move.line"].browse(
+                            line_vals.get("counterpart_line_id")
+                        )
+                        | line
+                    )
+            move.invalidate_recordset()
+        move._post()
+        for _account, lines in to_reconcile.items():
+            lines.reconcile()
+
+    def _reconcile_move_line_vals(self, line, move_id=False):
+        return {
+            "move_id": move_id or self.move_id.id,
             "account_id": line["account_id"][0],
             "partner_id": line.get("partner_id") and line["partner_id"][0],
             "credit": line["credit"],
