@@ -3,6 +3,21 @@
      License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl). -->
 <odoo>
 
+    <record id="view_account_journal_form" model="ir.ui.view">
+        <field name="name">account.journal.inherit.dashboard.kanban</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.view_account_journal_form" />
+        <field name="arch" type="xml">
+            <field name="suspense_account_id" position="before">
+                <field
+                    name="reconcile_mode"
+                    attrs="{'required': [('type', 'in', ('bank', 'cash'))], 'invisible': [('type', 'not in', ('bank', 'cash'))]}"
+                    options="{'no_quick_create': True}"
+                    groups="account.group_account_readonly"
+                />
+            </field>
+        </field>
+    </record>
     <record id="account_journal_dashboard_kanban_view" model="ir.ui.view">
         <field name="name">account.journal.inherit.dashboard.kanban</field>
         <field name="model">account.journal</field>
