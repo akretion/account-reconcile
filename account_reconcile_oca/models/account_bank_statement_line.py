@@ -278,9 +278,38 @@ class AccountBankStatementLine(models.Model):
             new_data.append(new_line)
         return new_data
 
+    def _compute_exchange_rate(self, data):
+        if not self.foreign_currency_id or self.is_reconciled:
+            return
+        currency = self.journal_id.currency_id or self.company_id.currency_id
+        currency_amount = self.foreign_currency_id._convert(
+            self.amount_currency, currency, self.company_id, self.date
+        )
+        amount = sum(d["amount"] for d in data) - currency_amount
+        if not currency.is_zero(amount):
+            account = self.company_id.expense_currency_exchange_account_id
+            if amount > 0:
+                account = self.company_id.income_currency_exchange_account_id
+            data.append(
+                {
+                    "reference": "reconcile_auxiliary;%s" % self.reconcile_auxiliary_id,
+                    "id": False,
+                    "account_id": account.name_get()[0],
+                    "partner_id": False,
+                    "date": fields.Date.to_string(self.date),
+                    "name": self.name,
+                    "amount": -amount,
+                    "credit": amount if amount > 0 else 0.0,
+                    "debit": -amount if amount < 0 else 0.0,
+                    "kind": "liquidity",
+                    "currency_id": self.currency_id.id,
+                }
+            )
+
     def _default_reconcile_data(self):
         liquidity_lines, suspense_lines, other_lines = self._seek_for_lines()
         data = [self._get_reconcile_line(line, "liquidity") for line in liquidity_lines]
+        self._compute_exchange_rate(data)
         res = (
             self.env["account.reconcile.model"]
             .search([("rule_type", "in", ["invoice_matching", "writeoff_suggestion"])])
