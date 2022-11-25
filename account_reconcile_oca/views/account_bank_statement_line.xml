@@ -204,7 +204,7 @@
                     <page name="manual" string="Manual operation">
                         <group>
                             <group>
-
+                                <field name="manual_reference" />
                                 <field
                                     name="manual_account_id"
                                     string="Account"
