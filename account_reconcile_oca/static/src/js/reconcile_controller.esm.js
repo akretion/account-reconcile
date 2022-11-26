@@ -14,6 +14,7 @@ export class ReconcileController extends KanbanController {
         this.effect = useService("effect");
         this.orm = useService("orm");
         this.action = useService("action");
+        this.activeActions = this.props.archInfo.activeActions;
         this.model.addEventListener("update", () => this.selectRecord(), {once: true});
     }
     async onClickNewButton() {

@@ -9,7 +9,7 @@
         >account.account.reconcile.form (in account_reconcile_oca)</field>
         <field name="model">account.account.reconcile</field>
         <field name="arch" type="xml">
-            <form js_class="reconcile_manual">
+            <form js_class="reconcile_manual" create="0">
                 <div class="o_form_statusbar o_account_reconcile_oca_statusbar">
                     <div class="o_statusbar_buttons">
                         <button
