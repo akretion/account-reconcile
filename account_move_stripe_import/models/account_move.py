@@ -28,15 +28,16 @@ class AccountMoveCompletionRule(models.Model):
         of the transaction instead of its ID.
         """
         res = {}
-        so_obj = self.env["sale.order"]
         reference = line.name
         if line.name.startswith("REFUND"):
             # Substring between
             reference = line.name[len("REFUND FOR CHARGE(")+1:-len(")")]
-        sales = so_obj.search(['|',
-                              ("payment_tx_id.reference", "=like", reference+'%'),
-                              ("payment_tx_id.acquirer_reference", "=", reference)])
-        partners = sales.mapped("partner_id")
+        transactions = self.env["payment.transaction"].search([
+            '|',
+            ("reference", "=like", reference+'%'),
+            ("acquirer_reference", "=", reference)
+        ])
+        partners = transactions.mapped("partner_id")
         if len(partners) > 1:
             raise ErrorTooManyPartner(
                 _('Line named "%s" was matched by more than ' "one partner.")
