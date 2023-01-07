@@ -44,6 +44,7 @@ class AccountBankStatementLine(models.Model):
     )
     manual_name = fields.Char(store=False, default=False, prefetch=False)
     manual_amount = fields.Monetary(store=False, default=False, prefetch=False)
+    can_reconcile = fields.Boolean(sparse="reconcile_data_info")
 
     def save(self):
         return {"type": "ir.actions.act_window_close"}
@@ -75,6 +76,7 @@ class AccountBankStatementLine(models.Model):
             self.reconcile_data_info = self.browse(
                 self.id.origin
             )._default_reconcile_data()
+        self.can_reconcile = self.reconcile_data_info["can_reconcile"]
 
     @api.onchange("add_account_move_line_id")
     def _onchange_add_account_move_line_id(self):
@@ -99,9 +101,11 @@ class AccountBankStatementLine(models.Model):
             self.reconcile_data_info = self._recompute_suspense_line(
                 new_data, self.reconcile_data_info["reconcile_auxiliary_id"]
             )
+            self.can_reconcile = self.reconcile_data_info["can_reconcile"]
             self.add_account_move_line_id = False
 
     def _recompute_suspense_line(self, data, reconcile_auxiliary_id):
+        can_reconcile = True
         total_amount = 0
         new_data = []
         suspense_line = False
@@ -109,6 +113,8 @@ class AccountBankStatementLine(models.Model):
         for line in data:
             if line.get("counterpart_line_id"):
                 counterparts.append(line["counterpart_line_id"])
+            if line["account_id"][0] == self.journal_id.suspense_account_id.id:
+                can_reconcile = False
             if line["kind"] != "suspense":
                 new_data.append(line)
                 total_amount += line["amount"]
@@ -117,6 +123,7 @@ class AccountBankStatementLine(models.Model):
         if not float_is_zero(
             total_amount, precision_digits=self.currency_id.decimal_places
         ):
+            can_reconcile = False
             if suspense_line:
                 suspense_line.update(
                     {
@@ -147,6 +154,7 @@ class AccountBankStatementLine(models.Model):
             "data": new_data,
             "counterparts": counterparts,
             "reconcile_auxiliary_id": reconcile_auxiliary_id,
+            "can_reconcile": can_reconcile,
         }
 
     def _check_line_changed(self, line):
@@ -193,6 +201,7 @@ class AccountBankStatementLine(models.Model):
         self.reconcile_data_info = self._recompute_suspense_line(
             new_data, self.reconcile_data_info["reconcile_auxiliary_id"]
         )
+        self.can_reconcile = self.reconcile_data_info["can_reconcile"]
 
     @api.onchange(
         "manual_account_id",
@@ -230,6 +239,7 @@ class AccountBankStatementLine(models.Model):
         self.reconcile_data_info = self._recompute_suspense_line(
             new_data, self.reconcile_data_info["reconcile_auxiliary_id"]
         )
+        self.can_reconcile = self.reconcile_data_info["can_reconcile"]
 
     @api.depends("reconcile_data")
     def _compute_reconcile_data_info(self):
@@ -238,6 +248,7 @@ class AccountBankStatementLine(models.Model):
                 record.reconcile_data_info = record.reconcile_data
             else:
                 record.reconcile_data_info = record._default_reconcile_data()
+            record.can_reconcile = record.reconcile_data_info["can_reconcile"]
 
     def action_show_move(self):
         self.ensure_one()
@@ -349,6 +360,7 @@ class AccountBankStatementLine(models.Model):
 
     def clean_reconcile(self):
         self.reconcile_data_info = self._default_reconcile_data()
+        self.can_reconcile = self.reconcile_data_info["can_reconcile"]
 
     def reconcile_bank_line(self):
         self.ensure_one()
