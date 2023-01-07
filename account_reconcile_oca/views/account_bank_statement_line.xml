@@ -148,7 +148,14 @@
                             type="object"
                             string="Reconcile"
                             class="btn btn-primary"
-                            attrs="{'invisible': [('is_reconciled', '=', True)]}"
+                            attrs="{'invisible': ['|', ('is_reconciled', '=', True), ('can_reconcile', '=', False)]}"
+                        />
+                        <button
+                            name="reconcile_bank_line"
+                            type="object"
+                            string="Reconcile"
+                            class="btn btn-primary disabled"
+                            attrs="{'invisible': ['|', ('is_reconciled', '=', True), ('can_reconcile', '=', True)]}"
                         />
                         <button
                             name="clean_reconcile"
@@ -166,6 +173,7 @@
                     </div>
                 </div>
                 <field name="name" invisible="1" />
+                <field name="can_reconcile" invisible="1" />
                 <field name="partner_id" invisible="1" />
                 <field name="company_id" invisible="1" />
                 <field name="journal_id" invisible="1" />
