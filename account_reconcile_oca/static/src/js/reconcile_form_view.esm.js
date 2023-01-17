@@ -10,6 +10,7 @@ const {useRef} = owl;
 export class ReconcileFormController extends FormController {
     setup() {
         super.setup(...arguments);
+        this.env.exposeController(this);
         this.orm = useService("orm");
         const rootRef = useRef("root");
         useViewButtons(this.model, rootRef, {
