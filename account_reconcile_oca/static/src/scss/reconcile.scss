@@ -55,6 +55,13 @@
             background-color: rgba($o-brand-primary, 0.2);
             color: #000;
         }
+        .o_reconcile_widget_table {
+            .o_reconcile_widget_line {
+                &.liquidity {
+                    font-weight: bold;
+                }
+            }
+        }
     }
 }
 .o_field_account_reconcile_oca_chatter {

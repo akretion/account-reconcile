@@ -54,7 +54,7 @@
     </t>
     <t t-name="account_reconcile_oca.ReconcileDataWidget" owl="1">
         <table
-            class="table table-sm position-relative mb-0 table-striped"
+            class="table table-sm position-relative mb-0 table-striped o_reconcile_widget_table"
             style="table-layout: auto"
         >
             <thead>
@@ -74,6 +74,7 @@
                 >
                     <tr
                         t-on-click="(ev) => this.selectReconcileLine(ev, reconcile_line)"
+                        t-att-class="'o_reconcile_widget_line ' + reconcile_line.kind"
                     >
                         <td t-esc="reconcile_line.account_id[1]" />
                         <td>
