@@ -168,7 +168,7 @@ class AccountBankStatementLine(models.Model):
             or (
                 self.manual_partner_id and self.manual_partner_id.name_get()[0] or False
             )
-            != line["partner_id"]
+            != line.get("partner_id")
         )
 
     @api.onchange("manual_reference", "manual_delete")
@@ -195,7 +195,7 @@ class AccountBankStatementLine(models.Model):
                     self.manual_amount = line["amount"]
                     self.manual_name = line["name"]
                     self.manual_partner_id = (
-                        line["partner_id"] and line["partner_id"][0]
+                        line.get("partner_id") and line["partner_id"][0]
                     )
             new_data.append(line)
         self.reconcile_data_info = self._recompute_suspense_line(
@@ -291,7 +291,7 @@ class AccountBankStatementLine(models.Model):
                 "currency_id": line.get("currency_id"),
             }
             reconcile_auxiliary_id += 1
-            if line["partner_id"]:
+            if line.get("partner_id"):
                 new_line["partner_id"] = (
                     self.env["res.partner"].browse(line["partner_id"]).name_get()[0]
                 )
