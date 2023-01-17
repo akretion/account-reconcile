@@ -10,12 +10,18 @@ export class ReconcileController extends KanbanController {
         this.state = useState({
             selectedRecordId: null,
         });
-        useSubEnv({parentController: this});
+        useSubEnv({
+            parentController: this,
+            exposeController: this.exposeController.bind(this),
+        });
         this.effect = useService("effect");
         this.orm = useService("orm");
         this.action = useService("action");
         this.activeActions = this.props.archInfo.activeActions;
         this.model.addEventListener("update", () => this.selectRecord(), {once: true});
+    }
+    exposeController(controller) {
+        this.form_controller = controller;
     }
     async onClickNewButton() {
         const action = await this.orm.call(this.props.resModel, "action_new_line", [], {
@@ -64,6 +70,17 @@ export class ReconcileController extends KanbanController {
             resId = records[0].resId;
         } else {
             resId = record.resId;
+        }
+        if (this.state.selectedRecordId && this.state.selectedRecordId !== resId) {
+            if (this.form_controller.model.root.isDirty) {
+                await this.form_controller.model.root.save({
+                    noReload: true,
+                    stayInEdition: true,
+                    useSaveErrorDialog: true,
+                });
+                await this.model.root.load();
+                await this.render(true);
+            }
         }
         if (!this.state.selectedRecordId || this.state.selectedRecordId !== resId) {
             this.state.selectedRecordId = resId;

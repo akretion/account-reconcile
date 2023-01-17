@@ -235,11 +235,18 @@ class AccountBankStatementLine(models.Model):
                             else "other",
                         }
                     )
+                    if line["kind"] == "liquidity":
+                        self._update_move_partner()
             new_data.append(line)
         self.reconcile_data_info = self._recompute_suspense_line(
             new_data, self.reconcile_data_info["reconcile_auxiliary_id"]
         )
         self.can_reconcile = self.reconcile_data_info["can_reconcile"]
+
+    def _update_move_partner(self):
+        if self.partner_id == self.manual_partner_id:
+            return
+        self.write({"partner_id": self.manual_partner_id.id})
 
     @api.depends("reconcile_data")
     def _compute_reconcile_data_info(self):
