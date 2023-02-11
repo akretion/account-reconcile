@@ -76,7 +76,7 @@ class AccountBankStatementLine(models.Model):
             self.reconcile_data_info = self.browse(
                 self.id.origin
             )._default_reconcile_data()
-        self.can_reconcile = self.reconcile_data_info["can_reconcile"]
+        self.can_reconcile = self.reconcile_data_info.get("can_reconcile", False)
 
     @api.onchange("add_account_move_line_id")
     def _onchange_add_account_move_line_id(self):
@@ -101,7 +101,7 @@ class AccountBankStatementLine(models.Model):
             self.reconcile_data_info = self._recompute_suspense_line(
                 new_data, self.reconcile_data_info["reconcile_auxiliary_id"]
             )
-            self.can_reconcile = self.reconcile_data_info["can_reconcile"]
+            self.can_reconcile = self.reconcile_data_info.get("can_reconcile", False)
             self.add_account_move_line_id = False
 
     def _recompute_suspense_line(self, data, reconcile_auxiliary_id):
@@ -201,7 +201,7 @@ class AccountBankStatementLine(models.Model):
         self.reconcile_data_info = self._recompute_suspense_line(
             new_data, self.reconcile_data_info["reconcile_auxiliary_id"]
         )
-        self.can_reconcile = self.reconcile_data_info["can_reconcile"]
+        self.can_reconcile = self.reconcile_data_info.get("can_reconcile", False)
 
     @api.onchange(
         "manual_account_id",
@@ -241,7 +241,7 @@ class AccountBankStatementLine(models.Model):
         self.reconcile_data_info = self._recompute_suspense_line(
             new_data, self.reconcile_data_info["reconcile_auxiliary_id"]
         )
-        self.can_reconcile = self.reconcile_data_info["can_reconcile"]
+        self.can_reconcile = self.reconcile_data_info.get("can_reconcile", False)
 
     def _update_move_partner(self):
         if self.partner_id == self.manual_partner_id:
@@ -255,7 +255,9 @@ class AccountBankStatementLine(models.Model):
                 record.reconcile_data_info = record.reconcile_data
             else:
                 record.reconcile_data_info = record._default_reconcile_data()
-            record.can_reconcile = record.reconcile_data_info["can_reconcile"]
+            record.can_reconcile = record.reconcile_data_info.get(
+                "can_reconcile", False
+            )
 
     def action_show_move(self):
         self.ensure_one()
@@ -367,7 +369,7 @@ class AccountBankStatementLine(models.Model):
 
     def clean_reconcile(self):
         self.reconcile_data_info = self._default_reconcile_data()
-        self.can_reconcile = self.reconcile_data_info["can_reconcile"]
+        self.can_reconcile = self.reconcile_data_info.get("can_reconcile", False)
 
     def reconcile_bank_line(self):
         self.ensure_one()
