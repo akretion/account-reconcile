@@ -375,9 +375,9 @@ class AccountBankStatementLine(models.Model):
         self.ensure_one()
         return getattr(
             self, "_reconcile_bank_line_%s" % self.journal_id.reconcile_mode
-        )()
+        )(self.reconcile_data_info["data"])
 
-    def _reconcile_bank_line_edit(self):
+    def _reconcile_bank_line_edit(self, data):
         _liquidity_lines, suspense_lines, other_lines = self._seek_for_lines()
         lines_to_remove = [(2, line.id) for line in suspense_lines + other_lines]
 
@@ -392,7 +392,7 @@ class AccountBankStatementLine(models.Model):
                     "line_ids": lines_to_remove,
                 }
             )
-            for line_vals in self.reconcile_data_info["data"]:
+            for line_vals in data:
                 if line_vals["kind"] == "liquidity":
                     continue
                 line = (
@@ -413,7 +413,7 @@ class AccountBankStatementLine(models.Model):
             "journal_id": self.journal_id.id,
         }
 
-    def _reconcile_bank_line_keep(self):
+    def _reconcile_bank_line_keep(self, data):
         move = (
             self.env["account.move"]
             .with_context(skip_invoice_sync=True)
@@ -450,7 +450,7 @@ class AccountBankStatementLine(models.Model):
                     ]
                 }
             )
-            for line_vals in self.reconcile_data_info["data"]:
+            for line_vals in data:
                 if line_vals["kind"] == "liquidity":
                     continue
                 if line_vals["kind"] == "suspense":
@@ -480,3 +480,42 @@ class AccountBankStatementLine(models.Model):
             "credit": line["credit"],
             "debit": line["debit"],
         }
+
+    @api.model_create_multi
+    def create(self, mvals):
+        result = super().create(mvals)
+        models = self.env["account.reconcile.model"].search(
+            [
+                ("rule_type", "in", ["invoice_matching", "writeoff_suggestion"]),
+                ("auto_reconcile", "=", True),
+            ]
+        )
+        for record in result:
+            res = models._apply_rules(record, record._retrieve_partner())
+            if not res:
+                continue
+            liquidity_lines, suspense_lines, other_lines = record._seek_for_lines()
+            data = [
+                record._get_reconcile_line(line, "liquidity")
+                for line in liquidity_lines
+            ]
+            reconcile_auxiliary_id = record._compute_exchange_rate(data)
+            if res.get("status", "") == "write_off":
+                data = record._recompute_suspense_line(
+                    *record._reconcile_data_by_model(
+                        data, res["model"], reconcile_auxiliary_id
+                    )
+                )
+            elif res.get("amls"):
+                amount = self.amount
+                for line in res.get("amls", []):
+                    line_data = record._get_reconcile_line(
+                        line, "other", is_counterpart=True, max_amount=amount
+                    )
+                    amount -= line_data.get("amount")
+                    data.append(line_data)
+                data = record._recompute_suspense_line(data, reconcile_auxiliary_id)
+            getattr(
+                record, "_reconcile_bank_line_%s" % record.journal_id.reconcile_mode
+            )(data["data"])
+        return result
