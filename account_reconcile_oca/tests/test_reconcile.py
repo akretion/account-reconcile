@@ -120,7 +120,6 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
         )
 
         bkstmt_data = bank_stmt_line.reconcile_data_info
-
         self.assertEqual(len(bkstmt_data["counterparts"]), 1)
         self.assertEqual(
             self.env["account.move.line"]

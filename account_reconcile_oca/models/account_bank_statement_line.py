@@ -515,6 +515,8 @@ class AccountBankStatementLine(models.Model):
                     amount -= line_data.get("amount")
                     data.append(line_data)
                 data = record._recompute_suspense_line(data, reconcile_auxiliary_id)
+            if not data.get("can_reconcile"):
+                continue
             getattr(
                 record, "_reconcile_bank_line_%s" % record.journal_id.reconcile_mode
             )(data["data"])
