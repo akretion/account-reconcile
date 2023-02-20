@@ -15,6 +15,12 @@ class AccountBankStatementLine(models.Model):
     reconcile_data_info = fields.Serialized(inverse="_inverse_reconcile_data_info")
     company_id = fields.Many2one(related="journal_id.company_id")
     reconcile_data = fields.Serialized()
+    manual_line_id = fields.Many2one(
+        "account.move.line",
+        store=False,
+        default=False,
+        prefetch=False,
+    )
     manual_account_id = fields.Many2one(
         "account.account",
         check_company=True,
@@ -190,6 +196,7 @@ class AccountBankStatementLine(models.Model):
                             "manual_amount": False,
                             "manual_name": False,
                             "manual_partner_id": False,
+                            "manual_line_id": False,
                         }
                     )
                     continue
@@ -200,6 +207,7 @@ class AccountBankStatementLine(models.Model):
                     self.manual_partner_id = (
                         line.get("partner_id") and line["partner_id"][0]
                     )
+                    self.manual_line_id = line["id"]
             new_data.append(line)
         self.reconcile_data_info = self._recompute_suspense_line(
             new_data, self.reconcile_data_info["reconcile_auxiliary_id"]
@@ -251,7 +259,7 @@ class AccountBankStatementLine(models.Model):
     def _update_move_partner(self):
         if self.partner_id == self.manual_partner_id:
             return
-        self.write({"partner_id": self.manual_partner_id.id})
+        self.partner_id = self.manual_partner_id
 
     @api.depends("reconcile_data")
     def _compute_reconcile_data_info(self):

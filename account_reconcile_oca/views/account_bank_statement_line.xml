@@ -212,10 +212,11 @@
                     <page name="manual" string="Manual operation">
                         <group>
                             <group>
+                                <field name="manual_line_id" invisible="1" />
                                 <field
                                     name="manual_account_id"
                                     string="Account"
-                                    attrs="{'readonly': ['|', ('manual_reference', '=', False), ('is_reconciled', '=', True)]}"
+                                    attrs="{'readonly': ['|', '|', ('manual_reference', '=', False), ('is_reconciled', '=', True), ('manual_line_id', '!=', False)]}"
                                 />
                                 <field
                                     name="manual_partner_id"
