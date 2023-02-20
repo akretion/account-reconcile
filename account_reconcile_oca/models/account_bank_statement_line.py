@@ -113,7 +113,10 @@ class AccountBankStatementLine(models.Model):
         for line in data:
             if line.get("counterpart_line_id"):
                 counterparts.append(line["counterpart_line_id"])
-            if line["account_id"][0] == self.journal_id.suspense_account_id.id:
+            if (
+                line["account_id"][0] == self.journal_id.suspense_account_id.id
+                or not line["account_id"][0]
+            ):
                 can_reconcile = False
             if line["kind"] != "suspense":
                 new_data.append(line)
@@ -222,7 +225,9 @@ class AccountBankStatementLine(models.Model):
                             "partner_id": self.manual_partner_id
                             and self.manual_partner_id.name_get()[0]
                             or False,
-                            "account_id": self.manual_account_id.name_get()[0],
+                            "account_id": self.manual_account_id.name_get()[0]
+                            if self.manual_account_id
+                            else [False, _("Undefined")],
                             "amount": self.manual_amount,
                             "credit": -self.manual_amount
                             if self.manual_amount < 0
