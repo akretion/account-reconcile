@@ -20,7 +20,7 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
             cls.company.account_journal_suspense_account_id
         )
 
-    def test_filter_partner1(self):
+    def test_filter_partner(self):
         inv1 = self.create_invoice(currency_id=self.currency_euro_id)
         inv2 = self.create_invoice(currency_id=self.currency_euro_id)
         partner = inv1.partner_id
