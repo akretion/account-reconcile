@@ -24,6 +24,7 @@
         "views/account_account.xml",
     ],
     "demo": ["demo/demo.xml"],
+    "post_init_hook": "post_init_hook",
     "assets": {
         "web.assets_backend": [
             "account_reconcile_oca/static/src/js/reconcile_manual_view.esm.js",

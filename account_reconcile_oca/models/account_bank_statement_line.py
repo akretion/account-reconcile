@@ -13,6 +13,11 @@ class AccountBankStatementLine(models.Model):
     _inherit = ["account.bank.statement.line", "account.reconcile.abstract"]
 
     reconcile_data_info = fields.Serialized(inverse="_inverse_reconcile_data_info")
+    reconcile_mode = fields.Selection(
+        selection=lambda self: self.env["account.journal"]
+        ._fields["reconcile_mode"]
+        .selection
+    )
     company_id = fields.Many2one(related="journal_id.company_id")
     reconcile_data = fields.Serialized()
     manual_line_id = fields.Many2one(
@@ -393,9 +398,10 @@ class AccountBankStatementLine(models.Model):
 
     def reconcile_bank_line(self):
         self.ensure_one()
-        return getattr(
-            self, "_reconcile_bank_line_%s" % self.journal_id.reconcile_mode
-        )(self.reconcile_data_info["data"])
+        self.reconcile_mode = self.journal_id.reconcile_mode
+        return getattr(self, "_reconcile_bank_line_%s" % self.reconcile_mode)(
+            self.reconcile_data_info["data"]
+        )
 
     def _reconcile_bank_line_edit(self, data):
         _liquidity_lines, suspense_lines, other_lines = self._seek_for_lines()
@@ -491,6 +497,28 @@ class AccountBankStatementLine(models.Model):
         move._post()
         for _account, lines in to_reconcile.items():
             lines.reconcile()
+
+    def unreconcile_bank_line(self):
+        self.ensure_one()
+        return getattr(self, "_unreconcile_bank_line_%s" % self.reconcile_mode)(
+            self.reconcile_data_info["data"]
+        )
+
+    def _unreconcile_bank_line_edit(self, data):
+        self.move_id.button_draft()
+        self.move_id.line_ids.unlink()
+        self.move_id.write(
+            {
+                "line_ids": [
+                    (0, 0, line_vals)
+                    for line_vals in self._prepare_move_line_default_vals()
+                ]
+            }
+        )
+        self.move_id.action_post()
+
+    def _unreconcile_bank_line_keep(self, data):
+        raise UserError(_("Keep suspense move lines mode cannot be unreconciled"))
 
     def _reconcile_move_line_vals(self, line, move_id=False):
         return {

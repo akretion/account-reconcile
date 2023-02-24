@@ -133,6 +133,14 @@
                             attrs="{'invisible': ['|', ('is_reconciled', '=', True), ('can_reconcile', '=', True)]}"
                         />
                         <button
+                            name="unreconcile_bank_line"
+                            type="object"
+                            string="Unreconcile"
+                            class="btn btn-warning"
+                            attrs="{'invisible': [('is_reconciled', '=', False)]}"
+                            confirm="Are you sure that the move should be unreconciled?"
+                        />
+                        <button
                             name="clean_reconcile"
                             type="object"
                             string="Clean"
