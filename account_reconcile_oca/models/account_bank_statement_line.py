@@ -21,6 +21,11 @@ class AccountBankStatementLine(models.Model):
         default=False,
         prefetch=False,
     )
+    manual_kind = fields.Char(
+        store=False,
+        default=False,
+        prefetch=False,
+    )
     manual_account_id = fields.Many2one(
         "account.account",
         check_company=True,
@@ -197,6 +202,7 @@ class AccountBankStatementLine(models.Model):
                             "manual_name": False,
                             "manual_partner_id": False,
                             "manual_line_id": False,
+                            "manual_kind": False,
                         }
                     )
                     continue
@@ -208,6 +214,7 @@ class AccountBankStatementLine(models.Model):
                         line.get("partner_id") and line["partner_id"][0]
                     )
                     self.manual_line_id = line["id"]
+                    self.manual_kind = line["kind"]
             new_data.append(line)
         self.reconcile_data_info = self._recompute_suspense_line(
             new_data, self.reconcile_data_info["reconcile_auxiliary_id"]

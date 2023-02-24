@@ -188,6 +188,7 @@
                         <group>
                             <group>
                                 <field name="manual_line_id" invisible="1" />
+                                <field name="manual_kind" invisible="1" />
                                 <field
                                     name="manual_account_id"
                                     string="Account"
@@ -196,14 +197,14 @@
                                 <field
                                     name="manual_partner_id"
                                     string="Partner"
-                                    attrs="{'readonly': ['|', ('manual_reference', '=', False), ('is_reconciled', '=', True)]}"
+                                    attrs="{'readonly': ['|', '|', ('manual_reference', '=', False), ('is_reconciled', '=', True), '&amp;', ('manual_line_id', '!=', False), ('manual_kind', '!=', 'liquidity')]}"
                                 />
                             </group>
                             <group>
                                 <field
                                     name="manual_name"
                                     string="Name"
-                                    attrs="{'readonly': ['|', ('manual_reference', '=', False), ('is_reconciled', '=', True)]}"
+                                    attrs="{'readonly': ['|', '|', ('manual_reference', '=', False), ('is_reconciled', '=', True), '&amp;', ('manual_line_id', '!=', False), ('manual_kind', '!=', 'liquidity')]}"
                                 />
                                 <field
                                     name="manual_amount"
