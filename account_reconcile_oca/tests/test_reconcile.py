@@ -1,11 +1,12 @@
 import time
 
-import odoo.tests
+from odoo.exceptions import UserError
+from odoo.tests import Form, tagged
 
 from odoo.addons.account.tests.common import TestAccountReconciliationCommon
 
 
-@odoo.tests.tagged("post_install", "-at_install")
+@tagged("post_install", "-at_install")
 class TestReconciliationWidget(TestAccountReconciliationCommon):
     @classmethod
     def setUpClass(cls, chart_template_ref=None):
@@ -19,6 +20,331 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
         cls.bank_journal_euro.suspense_account_id = (
             cls.company.account_journal_suspense_account_id
         )
+        cls.current_assets_account = cls.env["account.account"].search(
+            [
+                ("account_type", "=", "asset_current"),
+                ("company_id", "=", cls.company.id),
+            ],
+            limit=1,
+        )
+
+        cls.rule = cls.env["account.reconcile.model"].create(
+            {
+                "name": "write-off model",
+                "rule_type": "writeoff_suggestion",
+                "match_partner": True,
+                "match_partner_ids": [],
+                "line_ids": [(0, 0, {"account_id": cls.current_assets_account.id})],
+            }
+        )
+        # We need to make some fields visible in order to make the tests work
+        cls.env["ir.ui.view"].create(
+            {
+                "name": "DEMO Account bank statement",
+                "model": "account.bank.statement.line",
+                "inherit_id": cls.env.ref(
+                    "account_reconcile_oca.bank_statement_line_form_reconcile_view"
+                ).id,
+                "arch": """
+            <data>
+                <field name="manual_reference" position="attributes">
+                    <attribute name="invisible">0</attribute>
+                </field>
+                <field name="manual_delete" position="attributes">
+                    <attribute name="invisible">0</attribute>
+                </field>
+                <field name="partner_id" position="attributes">
+                    <attribute name="invisible">0</attribute>
+                </field>
+            </data>
+            """,
+            }
+        )
+
+    def test_reconcile_invoice(self):
+        inv1 = self.create_invoice(
+            currency_id=self.currency_euro_id, invoice_amount=100
+        )
+        bank_stmt = self.acc_bank_stmt_model.create(
+            {
+                "company_id": self.env.ref("base.main_company").id,
+                "journal_id": self.bank_journal_euro.id,
+                "date": time.strftime("%Y-07-15"),
+                "name": "test",
+            }
+        )
+        bank_stmt_line = self.acc_bank_stmt_line_model.create(
+            {
+                "name": "testLine",
+                "journal_id": self.bank_journal_euro.id,
+                "statement_id": bank_stmt.id,
+                "amount": 100,
+                "date": time.strftime("%Y-07-15"),
+            }
+        )
+        with Form(
+            bank_stmt_line,
+            view="account_reconcile_oca.bank_statement_line_form_reconcile_view",
+        ) as f:
+            self.assertFalse(f.can_reconcile)
+            f.add_account_move_line_id = inv1.line_ids.filtered(
+                lambda l: l.account_id.account_type == "asset_receivable"
+            )
+            self.assertFalse(f.add_account_move_line_id)
+            self.assertTrue(f.can_reconcile)
+        self.assertFalse(bank_stmt_line.is_reconciled)
+        self.assertTrue(
+            bank_stmt_line.move_id.line_ids.filtered(
+                lambda r: r.account_id == self.bank_journal_euro.suspense_account_id
+            )
+        )
+        bank_stmt_line.reconcile_bank_line()
+        self.assertTrue(bank_stmt_line.is_reconciled)
+        self.assertFalse(
+            bank_stmt_line.move_id.line_ids.filtered(
+                lambda r: r.account_id == self.bank_journal_euro.suspense_account_id
+            )
+        )
+        bank_stmt_line.unreconcile_bank_line()
+        self.assertFalse(bank_stmt_line.is_reconciled)
+        self.assertTrue(
+            bank_stmt_line.move_id.line_ids.filtered(
+                lambda r: r.account_id == self.bank_journal_euro.suspense_account_id
+            )
+        )
+
+    def test_reconcile_invoice_unselect(self):
+        inv1 = self.create_invoice(
+            currency_id=self.currency_euro_id, invoice_amount=100
+        )
+        bank_stmt = self.acc_bank_stmt_model.create(
+            {
+                "company_id": self.env.ref("base.main_company").id,
+                "journal_id": self.bank_journal_euro.id,
+                "date": time.strftime("%Y-07-15"),
+                "name": "test",
+            }
+        )
+        bank_stmt_line = self.acc_bank_stmt_line_model.create(
+            {
+                "name": "testLine",
+                "journal_id": self.bank_journal_euro.id,
+                "statement_id": bank_stmt.id,
+                "amount": 100,
+                "date": time.strftime("%Y-07-15"),
+            }
+        )
+        with Form(
+            bank_stmt_line,
+            view="account_reconcile_oca.bank_statement_line_form_reconcile_view",
+        ) as f:
+            self.assertFalse(f.can_reconcile)
+            f.add_account_move_line_id = inv1.line_ids.filtered(
+                lambda l: l.account_id.account_type == "asset_receivable"
+            )
+            self.assertFalse(f.add_account_move_line_id)
+            self.assertTrue(f.can_reconcile)
+            f.add_account_move_line_id = inv1.line_ids.filtered(
+                lambda l: l.account_id.account_type == "asset_receivable"
+            )
+            self.assertFalse(f.add_account_move_line_id)
+            self.assertFalse(f.can_reconcile)
+
+    def test_reconcile_invoice_partial(self):
+        inv1 = self.create_invoice(
+            currency_id=self.currency_euro_id, invoice_amount=100
+        )
+        inv2 = self.create_invoice(
+            currency_id=self.currency_euro_id, invoice_amount=100
+        )
+        bank_stmt = self.acc_bank_stmt_model.create(
+            {
+                "company_id": self.env.ref("base.main_company").id,
+                "journal_id": self.bank_journal_euro.id,
+                "date": time.strftime("%Y-07-15"),
+                "name": "test",
+            }
+        )
+        bank_stmt_line = self.acc_bank_stmt_line_model.create(
+            {
+                "name": "testLine",
+                "journal_id": self.bank_journal_euro.id,
+                "statement_id": bank_stmt.id,
+                "amount": 100,
+                "date": time.strftime("%Y-07-15"),
+            }
+        )
+        receivable1 = inv1.line_ids.filtered(
+            lambda l: l.account_id.account_type == "asset_receivable"
+        )
+        receivable2 = inv2.line_ids.filtered(
+            lambda l: l.account_id.account_type == "asset_receivable"
+        )
+        with Form(
+            bank_stmt_line,
+            view="account_reconcile_oca.bank_statement_line_form_reconcile_view",
+        ) as f:
+            self.assertFalse(f.can_reconcile)
+            f.add_account_move_line_id = receivable1
+            self.assertFalse(f.add_account_move_line_id)
+            self.assertTrue(f.can_reconcile)
+            f.manual_reference = "account.move.line;%s" % receivable1.id
+            self.assertEqual(f.manual_amount, -100)
+            f.manual_amount = -70
+            self.assertFalse(f.can_reconcile)
+            f.add_account_move_line_id = receivable2
+            f.manual_reference = "account.move.line;%s" % receivable2.id
+            self.assertEqual(f.manual_amount, -30)
+            self.assertTrue(f.can_reconcile)
+
+    def test_reconcile_invoice_delete(self):
+        inv1 = self.create_invoice(
+            currency_id=self.currency_euro_id, invoice_amount=100
+        )
+        bank_stmt = self.acc_bank_stmt_model.create(
+            {
+                "company_id": self.env.ref("base.main_company").id,
+                "journal_id": self.bank_journal_euro.id,
+                "date": time.strftime("%Y-07-15"),
+                "name": "test",
+            }
+        )
+        bank_stmt_line = self.acc_bank_stmt_line_model.create(
+            {
+                "name": "testLine",
+                "journal_id": self.bank_journal_euro.id,
+                "statement_id": bank_stmt.id,
+                "amount": 100,
+                "date": time.strftime("%Y-07-15"),
+            }
+        )
+        receivable1 = inv1.line_ids.filtered(
+            lambda l: l.account_id.account_type == "asset_receivable"
+        )
+        with Form(
+            bank_stmt_line,
+            view="account_reconcile_oca.bank_statement_line_form_reconcile_view",
+        ) as f:
+            self.assertFalse(f.can_reconcile)
+            f.add_account_move_line_id = receivable1
+            self.assertFalse(f.add_account_move_line_id)
+            self.assertTrue(f.can_reconcile)
+            f.manual_reference = "account.move.line;%s" % receivable1.id
+            self.assertEqual(f.manual_amount, -100)
+            f.manual_delete = True
+            self.assertFalse(f.can_reconcile)
+
+    def test_reconcile_invoice_change_partner(self):
+        inv1 = self.create_invoice(
+            currency_id=self.currency_euro_id, invoice_amount=100
+        )
+        bank_stmt = self.acc_bank_stmt_model.create(
+            {
+                "company_id": self.env.ref("base.main_company").id,
+                "journal_id": self.bank_journal_euro.id,
+                "date": time.strftime("%Y-07-15"),
+                "name": "test",
+            }
+        )
+        bank_stmt_line = self.acc_bank_stmt_line_model.create(
+            {
+                "name": "testLine",
+                "journal_id": self.bank_journal_euro.id,
+                "statement_id": bank_stmt.id,
+                "amount": 100,
+                "date": time.strftime("%Y-07-15"),
+            }
+        )
+        liquidity_lines, suspense_lines, other_lines = bank_stmt_line._seek_for_lines()
+        with Form(
+            bank_stmt_line,
+            view="account_reconcile_oca.bank_statement_line_form_reconcile_view",
+        ) as f:
+            self.assertFalse(f.can_reconcile)
+            self.assertFalse(f.partner_id)
+            f.manual_reference = "account.move.line;%s" % liquidity_lines.id
+            f.manual_partner_id = inv1.partner_id
+            self.assertEqual(f.partner_id, inv1.partner_id)
+        bank_stmt_line.clean_reconcile()
+        # As we have a set a partner, the cleaning should assign the invoice automatically
+        self.assertTrue(bank_stmt_line.can_reconcile)
+
+    def test_reconcile_invoice_keep(self):
+        self.bank_journal_euro.reconcile_mode = "keep"
+        self.bank_journal_euro.suspense_account_id.reconcile = True
+        inv1 = self.create_invoice(
+            currency_id=self.currency_euro_id, invoice_amount=100
+        )
+        bank_stmt = self.acc_bank_stmt_model.create(
+            {
+                "company_id": self.env.ref("base.main_company").id,
+                "journal_id": self.bank_journal_euro.id,
+                "date": time.strftime("%Y-07-15"),
+                "name": "test",
+            }
+        )
+        bank_stmt_line = self.acc_bank_stmt_line_model.create(
+            {
+                "name": "testLine",
+                "journal_id": self.bank_journal_euro.id,
+                "statement_id": bank_stmt.id,
+                "amount": 100,
+                "date": time.strftime("%Y-07-15"),
+            }
+        )
+        receivable1 = inv1.line_ids.filtered(
+            lambda l: l.account_id.account_type == "asset_receivable"
+        )
+        with Form(
+            bank_stmt_line,
+            view="account_reconcile_oca.bank_statement_line_form_reconcile_view",
+        ) as f:
+            self.assertFalse(f.can_reconcile)
+            f.add_account_move_line_id = receivable1
+            self.assertFalse(f.add_account_move_line_id)
+        self.assertTrue(bank_stmt_line.can_reconcile)
+        bank_stmt_line.reconcile_bank_line()
+        self.assertIn(
+            self.bank_journal_euro.suspense_account_id,
+            bank_stmt_line.mapped("move_id.line_ids.account_id"),
+        )
+        with self.assertRaises(UserError):
+            bank_stmt_line.unreconcile_bank_line()
+
+    def test_reconcile_invoice_clean(self):
+        inv1 = self.create_invoice(
+            currency_id=self.currency_euro_id, invoice_amount=100
+        )
+        bank_stmt = self.acc_bank_stmt_model.create(
+            {
+                "company_id": self.env.ref("base.main_company").id,
+                "journal_id": self.bank_journal_euro.id,
+                "date": time.strftime("%Y-07-15"),
+                "name": "test",
+            }
+        )
+        bank_stmt_line = self.acc_bank_stmt_line_model.create(
+            {
+                "name": "testLine",
+                "journal_id": self.bank_journal_euro.id,
+                "statement_id": bank_stmt.id,
+                "amount": 100,
+                "date": time.strftime("%Y-07-15"),
+            }
+        )
+        receivable1 = inv1.line_ids.filtered(
+            lambda l: l.account_id.account_type == "asset_receivable"
+        )
+        with Form(
+            bank_stmt_line,
+            view="account_reconcile_oca.bank_statement_line_form_reconcile_view",
+        ) as f:
+            self.assertFalse(f.can_reconcile)
+            f.add_account_move_line_id = receivable1
+            self.assertFalse(f.add_account_move_line_id)
+        self.assertTrue(bank_stmt_line.can_reconcile)
+        bank_stmt_line.clean_reconcile()
+        self.assertFalse(bank_stmt_line.can_reconcile)
 
     def test_filter_partner(self):
         inv1 = self.create_invoice(currency_id=self.currency_euro_id)
@@ -126,4 +452,41 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
             .browse(bkstmt_data["counterparts"])
             .partner_id,
             parent_partner,
+        )
+
+    def test_reconcile_invoice_model(self):
+        bank_stmt = self.acc_bank_stmt_model.create(
+            {
+                "company_id": self.env.ref("base.main_company").id,
+                "journal_id": self.bank_journal_euro.id,
+                "date": time.strftime("%Y-07-15"),
+                "name": "test",
+            }
+        )
+        bank_stmt_line = self.acc_bank_stmt_line_model.create(
+            {
+                "name": "testLine",
+                "journal_id": self.bank_journal_euro.id,
+                "statement_id": bank_stmt.id,
+                "amount": 100,
+                "date": time.strftime("%Y-07-15"),
+            }
+        )
+        with Form(
+            bank_stmt_line,
+            view="account_reconcile_oca.bank_statement_line_form_reconcile_view",
+        ) as f:
+            self.assertFalse(f.can_reconcile)
+            f.manual_model_id = self.rule
+            self.assertTrue(f.can_reconcile)
+            # We need to check what happens when we uncheck it too
+            f.manual_model_id = self.env["account.reconcile.model"]
+            self.assertFalse(f.can_reconcile)
+            f.manual_model_id = self.rule
+            self.assertTrue(f.can_reconcile)
+        bank_stmt_line.reconcile_bank_line()
+        self.assertTrue(
+            bank_stmt_line.move_id.line_ids.filtered(
+                lambda r: r.account_id == self.current_assets_account
+            )
         )
