@@ -122,7 +122,7 @@ class AccountBankStatementLine(models.Model):
             if (
                 line["account_id"][0] == self.journal_id.suspense_account_id.id
                 or not line["account_id"][0]
-            ):
+            ) and line["kind"] != "suspense":
                 can_reconcile = False
             if line["kind"] != "suspense":
                 new_data.append(line)
