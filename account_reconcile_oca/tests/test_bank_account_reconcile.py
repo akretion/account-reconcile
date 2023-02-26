@@ -545,7 +545,26 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
 
     # Testing actions
 
-    def test_bank_statement_actions(self):
+    def test_bank_statement_action_to_check(self):
+        action = self.bank_journal_euro.action_open_reconcile_to_check()
+        self.assertFalse(self.env[action["res_model"]].search(action["domain"]))
+
+    def test_bank_statement_rainbowman(self):
+        message = self.bank_journal_euro.get_rainbowman_message()
+        self.assertTrue(message)
+        self.acc_bank_stmt_line_model.create(
+            {
+                "name": "testLine",
+                "journal_id": self.bank_journal_euro.id,
+                "amount": 100,
+                "date": time.strftime("%Y-07-15"),
+            }
+        )
+        self.env.flush_all()
+        message = self.bank_journal_euro.get_rainbowman_message()
+        self.assertFalse(message)
+
+    def test_bank_statement_line_actions(self):
         """
         Testing the actions of bank statement
         """

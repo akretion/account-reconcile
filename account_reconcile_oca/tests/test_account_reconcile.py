@@ -199,7 +199,7 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
 
     def test_cannot_reconcile_different_partners(self):
         """
-        There is not enough records to reconcile for this account
+        We can only reconcile lines with the same account and partner.
         """
         reconcile_account = self.env["account.account.reconcile"].search(
             [
