@@ -31,7 +31,7 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
         cls.rule = cls.env["account.reconcile.model"].create(
             {
                 "name": "write-off model",
-                "rule_type": "writeoff_suggestion",
+                "rule_type": "writeoff_button",
                 "match_partner": True,
                 "match_partner_ids": [],
                 "line_ids": [(0, 0, {"account_id": cls.current_assets_account.id})],
@@ -490,3 +490,59 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
                 lambda r: r.account_id == self.current_assets_account
             )
         )
+
+    def test_actions(self):
+        bank_stmt = self.acc_bank_stmt_model.create(
+            {
+                "company_id": self.env.ref("base.main_company").id,
+                "journal_id": self.bank_journal_euro.id,
+                "date": time.strftime("%Y-07-15"),
+                "name": "test",
+            }
+        )
+        bank_stmt_line = self.acc_bank_stmt_line_model.create(
+            {
+                "name": "testLine",
+                "journal_id": self.bank_journal_euro.id,
+                "statement_id": bank_stmt.id,
+                "amount": 100,
+                "date": time.strftime("%Y-07-15"),
+            }
+        )
+        move_action = bank_stmt_line.action_show_move()
+        self.assertEqual(
+            bank_stmt_line.move_id,
+            self.env[move_action["res_model"]].browse(move_action["res_id"]),
+        )
+
+    def test_rule_match_reconcile(self):
+        self.env["account.reconcile.model"].create(
+            {
+                "name": "write-off model suggestion",
+                "rule_type": "writeoff_suggestion",
+                "match_label": "contains",
+                "match_label_param": "DEMO WRITEOFF",
+                "auto_reconcile": True,
+                "line_ids": [(0, 0, {"account_id": self.current_assets_account.id})],
+            }
+        )
+
+        bank_stmt = self.acc_bank_stmt_model.create(
+            {
+                "company_id": self.env.ref("base.main_company").id,
+                "journal_id": self.bank_journal_euro.id,
+                "date": time.strftime("%Y-07-15"),
+                "name": "test",
+            }
+        )
+        bank_stmt_line = self.acc_bank_stmt_line_model.create(
+            {
+                "name": "DEMO WRITEOFF",
+                "payment_ref": "DEMO WRITEOFF",
+                "journal_id": self.bank_journal_euro.id,
+                "statement_id": bank_stmt.id,
+                "amount": 100,
+                "date": time.strftime("%Y-07-15"),
+            }
+        )
+        self.assertTrue(bank_stmt_line.is_reconciled)
