@@ -61,7 +61,12 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
             }
         )
 
-    def test_reconcile_invoice(self):
+    def test_reconcile_invoice_unreconcile(self):
+        """
+        We want to test the reconcile widget for bank statements on invoices.
+        As we use edit mode by default, we will also check what happens when
+        we press unreconcile
+        """
         inv1 = self.create_invoice(
             currency_id=self.currency_euro_id, invoice_amount=100
         )
@@ -114,6 +119,10 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
         )
 
     def test_reconcile_invoice_unselect(self):
+        """
+        We want to test how selection and unselection of an account move lines is managed
+        by the system.
+        """
         inv1 = self.create_invoice(
             currency_id=self.currency_euro_id, invoice_amount=100
         )
@@ -151,6 +160,10 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
             self.assertFalse(f.can_reconcile)
 
     def test_reconcile_invoice_partial(self):
+        """
+        We want to partially reconcile two invoices from a single payment.
+        As a result, both invoices must be partially reconciled
+        """
         inv1 = self.create_invoice(
             currency_id=self.currency_euro_id, invoice_amount=100
         )
@@ -196,8 +209,16 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
             f.manual_reference = "account.move.line;%s" % receivable2.id
             self.assertEqual(f.manual_amount, -30)
             self.assertTrue(f.can_reconcile)
+        self.assertEqual(inv1.amount_residual, 100)
+        self.assertEqual(inv2.amount_residual, 100)
+        bank_stmt_line.reconcile_bank_line()
+        self.assertEqual(inv1.amount_residual, 30)
+        self.assertEqual(inv2.amount_residual, 70)
 
     def test_reconcile_invoice_delete(self):
+        """
+        We need to test the possibility to remove a line from the reconcile widget
+        """
         inv1 = self.create_invoice(
             currency_id=self.currency_euro_id, invoice_amount=100
         )
@@ -235,6 +256,10 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
             self.assertFalse(f.can_reconcile)
 
     def test_reconcile_invoice_change_partner(self):
+        """
+        We want to know how the change of partner of
+        a bank statement line is managed
+        """
         inv1 = self.create_invoice(
             currency_id=self.currency_euro_id, invoice_amount=100
         )
@@ -270,6 +295,10 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
         self.assertTrue(bank_stmt_line.can_reconcile)
 
     def test_reconcile_invoice_keep(self):
+        """
+        We want to test how the keep mode works, keeping the original move lines.
+        However, the unreconcile will not work properly
+        """
         self.bank_journal_euro.reconcile_mode = "keep"
         self.bank_journal_euro.suspense_account_id.reconcile = True
         inv1 = self.create_invoice(
@@ -312,6 +341,9 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
             bank_stmt_line.unreconcile_bank_line()
 
     def test_reconcile_invoice_clean(self):
+        """
+        We want to test how the clean works on an already defined bank statement
+        """
         inv1 = self.create_invoice(
             currency_id=self.currency_euro_id, invoice_amount=100
         )
@@ -347,6 +379,10 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
         self.assertFalse(bank_stmt_line.can_reconcile)
 
     def test_filter_partner(self):
+        """
+        When a partner is set, the system might try to define an existent
+        invoice automatically
+        """
         inv1 = self.create_invoice(currency_id=self.currency_euro_id)
         inv2 = self.create_invoice(currency_id=self.currency_euro_id)
         partner = inv1.partner_id
@@ -454,7 +490,11 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
             parent_partner,
         )
 
-    def test_reconcile_invoice_model(self):
+    def test_reconcile_clean_model(self):
+        """
+        We want to test what happens when we select an reconcile model to fill a
+        bank statement.
+        """
         bank_stmt = self.acc_bank_stmt_model.create(
             {
                 "company_id": self.env.ref("base.main_company").id,
@@ -491,7 +531,10 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
             )
         )
 
-    def test_actions(self):
+    def test_bank_statement_actions(self):
+        """
+        Testing the actions of bank statement
+        """
         bank_stmt = self.acc_bank_stmt_model.create(
             {
                 "company_id": self.env.ref("base.main_company").id,
@@ -516,6 +559,10 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
         )
 
     def test_rule_match_reconcile(self):
+        """
+        Testing the fill of the bank statment line with
+        writeoff suggestion reconcile model with auto_reconcile
+        """
         self.env["account.reconcile.model"].create(
             {
                 "name": "write-off model suggestion",
