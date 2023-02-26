@@ -27,6 +27,7 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
             ],
             limit=1,
         )
+        cls.current_assets_account.reconcile = True
 
         cls.rule = cls.env["account.reconcile.model"].create(
             {
@@ -265,7 +266,7 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
         )
         self.assertEqual(0, inv1.amount_residual)
 
-    def test_rule_match_reconcile(self):
+    def test_reconcile_rule_on_create(self):
         """
         Testing the fill of the bank statment line with
         writeoff suggestion reconcile model with auto_reconcile

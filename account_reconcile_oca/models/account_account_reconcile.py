@@ -25,7 +25,7 @@ class AccountAccountReconcile(models.Model):
 
     @property
     def _table_query(self):
-        return "SELECT * FROM (%s %s %s %s %s) as T" % (
+        return "%s %s %s %s %s" % (
             self._select(),
             self._from(),
             self._where(),
@@ -36,7 +36,13 @@ class AccountAccountReconcile(models.Model):
     def _select(self):
         return """
             SELECT
-                (aml.partner_id + a.id)*(aml.partner_id+a.id - 1)/2 + aml.partner_id as id,
+                CAST(
+                    (
+                        coalesce(aml.partner_id, 0) + a.id
+                    )*(
+                        COALESCE(aml.partner_id, 0)+a.id - 1
+                    )/2 + COALESCE(aml.partner_id, 0) AS INTEGER
+                ) as id,
                 MAX(a.name) as name,
                 aml.partner_id,
                 a.id as account_id,
