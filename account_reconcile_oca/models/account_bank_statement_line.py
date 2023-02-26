@@ -78,7 +78,7 @@ class AccountBankStatementLine(models.Model):
         if self.manual_model_id:
             data = []
             for line in self.reconcile_data_info.get("data", []):
-                if line.get("kind") == "liquidity":
+                if line.get("kind") != "suspense":
                     data.append(line)
             self.reconcile_data_info = self._recompute_suspense_line(
                 *self._reconcile_data_by_model(
@@ -302,7 +302,7 @@ class AccountBankStatementLine(models.Model):
         new_data = []
         liquidity_amount = 0.0
         for line_data in data:
-            if line_data["kind"] != "liquidity":
+            if line_data["kind"] == "suspense":
                 continue
             new_data.append(line_data)
             liquidity_amount += line_data["amount"]
@@ -410,6 +410,7 @@ class AccountBankStatementLine(models.Model):
         # Cleanup previous lines.
         move = self.move_id
         container = {"records": move, "self": move}
+        to_reconcile = []
         with move._check_balanced(container):
             move.with_context(
                 skip_account_move_synchronization=True, force_delete=True
@@ -427,12 +428,14 @@ class AccountBankStatementLine(models.Model):
                     .create(self._reconcile_move_line_vals(line_vals))
                 )
                 if line_vals.get("counterpart_line_id"):
-                    (
+                    to_reconcile.append(
                         self.env["account.move.line"].browse(
                             line_vals.get("counterpart_line_id")
                         )
                         + line
-                    ).reconcile()
+                    )
+        for reconcile_items in to_reconcile:
+            reconcile_items.reconcile()
 
     def _reconcile_bank_line_keep_move_vals(self):
         return {

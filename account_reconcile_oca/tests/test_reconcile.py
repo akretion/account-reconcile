@@ -531,6 +531,59 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
             )
         )
 
+    def test_reconcile_invoice_model(self):
+        """
+        We want to test what happens when we select a reconcile model to fill a
+        bank statement prefilled with an invoice.
+
+        The result should be the reconcile of the invoice, and the rest set to the model
+        """
+
+        inv1 = self.create_invoice(currency_id=self.currency_euro_id)
+
+        receivable1 = inv1.line_ids.filtered(
+            lambda l: l.account_id.account_type == "asset_receivable"
+        )
+        bank_stmt = self.acc_bank_stmt_model.create(
+            {
+                "company_id": self.env.ref("base.main_company").id,
+                "journal_id": self.bank_journal_euro.id,
+                "date": time.strftime("%Y-07-15"),
+                "name": "test",
+            }
+        )
+        bank_stmt_line = self.acc_bank_stmt_line_model.create(
+            {
+                "name": "testLine",
+                "journal_id": self.bank_journal_euro.id,
+                "statement_id": bank_stmt.id,
+                "amount": 100,
+                "date": time.strftime("%Y-07-15"),
+            }
+        )
+        with Form(
+            bank_stmt_line,
+            view="account_reconcile_oca.bank_statement_line_form_reconcile_view",
+        ) as f:
+            self.assertFalse(f.can_reconcile)
+            f.add_account_move_line_id = receivable1
+            self.assertFalse(f.can_reconcile)
+            f.manual_model_id = self.rule
+            self.assertTrue(f.can_reconcile)
+        bank_stmt_line.reconcile_bank_line()
+        self.assertNotEqual(self.current_assets_account, receivable1.account_id)
+        self.assertTrue(
+            bank_stmt_line.move_id.line_ids.filtered(
+                lambda r: r.account_id == self.current_assets_account
+            )
+        )
+        self.assertTrue(
+            bank_stmt_line.move_id.line_ids.filtered(
+                lambda r: r.account_id == receivable1.account_id
+            )
+        )
+        self.assertEqual(0, inv1.amount_residual)
+
     def test_bank_statement_actions(self):
         """
         Testing the actions of bank statement
