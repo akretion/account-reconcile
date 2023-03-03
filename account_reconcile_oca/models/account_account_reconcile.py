@@ -120,6 +120,21 @@ class AccountAccountReconcile(models.Model):
             self.reconcile_data_info = self._recompute_data(data)
             self.add_account_move_line_id = False
 
+    @api.onchange("manual_reference", "manual_delete")
+    def _onchange_manual_reconcile_reference(self):
+        self.ensure_one()
+        data = self.reconcile_data_info
+        counterparts = []
+        for line in data["data"]:
+            if line["reference"] == self.manual_reference:
+                if self.manual_delete:
+                    continue
+            counterparts.append(line["id"])
+        data["counterparts"] = counterparts
+        self.reconcile_data_info = self._recompute_data(data)
+        self.manual_delete = False
+        self.manual_reference = False
+
     def _recompute_data(self, data):
         new_data = {"data": [], "counterparts": data["counterparts"]}
         counterparts = data["counterparts"]

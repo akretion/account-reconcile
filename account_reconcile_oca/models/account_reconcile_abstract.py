@@ -22,6 +22,11 @@ class AccountReconcileAbstract(models.AbstractModel):
         prefetch=False,
     )
     manual_reference = fields.Char(store=False, default=False, prefetch=False)
+    manual_delete = fields.Boolean(
+        store=False,
+        default=False,
+        prefetch=False,
+    )
 
     def _get_reconcile_line(self, line, kind, is_counterpart=False, max_amount=False):
         original_amount = amount = line.debit - line.credit

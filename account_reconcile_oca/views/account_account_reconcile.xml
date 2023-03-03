@@ -10,6 +10,8 @@
         <field name="model">account.account.reconcile</field>
         <field name="arch" type="xml">
             <form js_class="reconcile_manual" create="0">
+                <field name="manual_delete" invisible="1" />
+                <field name="manual_reference" invisible="1" />
                 <div class="o_form_statusbar o_account_reconcile_oca_statusbar">
                     <div class="o_statusbar_buttons">
                         <button
@@ -34,7 +36,7 @@
                     <field name="partner_id" />
                     </group>
                     <group>
-                    <field name="account_id" />
+                        <field name="account_id" />
                     </group>
                 </group>
                 <field
