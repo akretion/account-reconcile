@@ -59,6 +59,7 @@ class AccountReconcileAbstract(models.AbstractModel):
             amount - original_amount, precision_digits=line.currency_id.decimal_places
         ):
             vals["original_amount"] = abs(original_amount)
+            vals["original_amount_unsigned"] = original_amount
         if is_counterpart:
             vals["counterpart_line_id"] = line.id
         return vals

@@ -220,6 +220,35 @@
                                     string="Amount"
                                     attrs="{'readonly': ['|', ('manual_reference', '=', False), ('is_reconciled', '=', True)]}"
                                 />
+                                <field name="manual_original_amount" invisible="1" />
+                                <field name="manual_move_type" invisible="1" />
+                                <label
+                                    for="manual_move_id"
+                                    string=""
+                                    attrs="{'invisible': ['|', ('manual_move_type', 'not in', ['in_invoice', 'in_refund', 'out_invoice', 'out_refund']), ('manual_original_amount', '=', 0)]}"
+                                />
+                                <div
+                                    attrs="{'invisible': ['|', ('manual_move_type', 'not in', ['in_invoice', 'in_refund', 'out_invoice', 'out_refund']), ('manual_original_amount', '=', 0)]}"
+                                >
+                                    Invoice <field
+                                        class="oe_inline"
+                                        name="manual_move_id"
+                                    />
+                                    with an open amount <field
+                                        class="oe_inline"
+                                        name="manual_original_amount"
+                                    /> will be reduced by <field
+                                        class="oe_inline"
+                                        name="manual_amount"
+                                        readonly="1"
+                                    />.
+                                    <br />
+                                You might want to set the invoice as <button
+                                        name="button_manual_reference_full_paid"
+                                        type="object"
+                                        method_args="[1]"
+                                    >fully paid</button>.
+                                </div>
                             </group>
                         </group>
                     </page>
