@@ -400,7 +400,8 @@ class AccountBankStatementLine(models.Model):
             return self._recompute_suspense_line(
                 *self._reconcile_data_by_model(
                     data, res["model"], reconcile_auxiliary_id
-                )
+                ),
+                self.manual_reference
             )
         elif res and res.get("amls"):
             amount = self.amount
