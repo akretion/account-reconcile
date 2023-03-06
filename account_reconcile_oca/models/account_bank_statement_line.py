@@ -330,24 +330,22 @@ class AccountBankStatementLine(models.Model):
                 continue
             new_data.append(line_data)
             liquidity_amount += line_data["amount"]
-        for line in reconcile_model._apply_lines_for_bank_widget(
-            -liquidity_amount, self._retrieve_partner(), self
+        for line in reconcile_model._get_write_off_move_lines_dict(
+            -liquidity_amount, self._retrieve_partner()
         ):
-            amount = line["amount_currency"]
-            new_line = {
-                "reference": "reconcile_auxiliary;%s" % reconcile_auxiliary_id,
-                "id": False,
-                "amount": amount,
-                "debit": amount if amount > 0 else 0.0,
-                "credit": -amount if amount < 0 else 0.0,
-                "kind": "other",
-                "account_id": self.env["account.account"]
-                .browse(line["account_id"])
-                .name_get()[0],
-                "date": fields.Date.to_string(self.date),
-                "name": line.get("name"),
-                "currency_id": line.get("currency_id"),
-            }
+            new_line = line.copy()
+            new_line.update(
+                {
+                    "reference": "reconcile_auxiliary;%s" % reconcile_auxiliary_id,
+                    "id": False,
+                    "amount": line["debit"] - line["credit"],
+                    "kind": "other",
+                    "account_id": self.env["account.account"]
+                    .browse(line["account_id"])
+                    .name_get()[0],
+                    "date": fields.Date.to_string(self.date),
+                }
+            )
             reconcile_auxiliary_id += 1
             if line.get("partner_id"):
                 new_line["partner_id"] = (
@@ -441,7 +439,9 @@ class AccountBankStatementLine(models.Model):
         to_reconcile = []
         with move._check_balanced(container):
             move.with_context(
-                skip_account_move_synchronization=True, force_delete=True
+                skip_account_move_synchronization=True,
+                force_delete=True,
+                skip_invoice_sync=True,
             ).write(
                 {
                     "line_ids": lines_to_remove,
@@ -452,7 +452,11 @@ class AccountBankStatementLine(models.Model):
                     continue
                 line = (
                     self.env["account.move.line"]
-                    .with_context(check_move_validity=False)
+                    .with_context(
+                        check_move_validity=False,
+                        skip_sync_invoice=True,
+                        skip_invoice_sync=True,
+                    )
                     .create(self._reconcile_move_line_vals(line_vals))
                 )
                 if line_vals.get("counterpart_line_id"):
@@ -488,7 +492,11 @@ class AccountBankStatementLine(models.Model):
                 ).copy_data({"move_id": move.id})[0]
                 to_reconcile[line.account_id.id] |= (
                     self.env["account.move.line"]
-                    .with_context(check_move_validity=False, skip_invoice_sync=True)
+                    .with_context(
+                        check_move_validity=False,
+                        skip_sync_invoice=True,
+                        skip_invoice_sync=True,
+                    )
                     .create(line_data)
                 )
             move.write(
@@ -558,6 +566,13 @@ class AccountBankStatementLine(models.Model):
             "partner_id": line.get("partner_id") and line["partner_id"][0],
             "credit": line["credit"],
             "debit": line["debit"],
+            "tax_ids": line.get("tax_ids", []),
+            "tax_tag_ids": line.get("tax_tag_ids", []),
+            "group_tax_id": line.get("group_tax_id"),
+            "tax_repartition_line_id": line.get("tax_repartition_line_id"),
+            "analytic_distribution": line.get("analytic_distribution"),
+            "name": line.get("name"),
+            "reconcile_model_id": line.get("reconcile_model_id"),
         }
 
     @api.model_create_multi
