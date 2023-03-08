@@ -121,7 +121,7 @@
                     <button
                             name="reconcile_bank_line"
                             type="object"
-                            string="Reconcile"
+                            string="Confirm"
                             class="btn btn-primary"
                             attrs="{'invisible': ['|', ('is_reconciled', '=', True), ('can_reconcile', '=', False)]}"
                         />
@@ -135,7 +135,7 @@
                         <button
                             name="unreconcile_bank_line"
                             type="object"
-                            string="Unreconcile"
+                            string="Reset"
                             class="btn btn-warning"
                             attrs="{'invisible': [('is_reconciled', '=', False)]}"
                             confirm="Are you sure that the move should be unreconciled?"
@@ -201,6 +201,13 @@
                                 <field
                                     name="manual_account_id"
                                     string="Account"
+                                    attrs="{'readonly': ['|', '|', ('manual_reference', '=', False), ('is_reconciled', '=', True), ('manual_line_id', '!=', False)]}"
+                                />
+                                <field
+                                    name="analytic_distribution"
+                                    widget="analytic_distribution"
+                                    groups="analytic.group_analytic_accounting"
+                                    options="{'account_field': 'manual_account_id'}"
                                     attrs="{'readonly': ['|', '|', ('manual_reference', '=', False), ('is_reconciled', '=', True), ('manual_line_id', '!=', False)]}"
                                 />
                                 <field

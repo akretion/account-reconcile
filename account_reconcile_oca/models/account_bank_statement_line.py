@@ -10,7 +10,11 @@ from odoo.tools import float_is_zero
 
 class AccountBankStatementLine(models.Model):
     _name = "account.bank.statement.line"
-    _inherit = ["account.bank.statement.line", "account.reconcile.abstract"]
+    _inherit = [
+        "account.bank.statement.line",
+        "account.reconcile.abstract",
+        "analytic.mixin",
+    ]
 
     reconcile_data_info = fields.Serialized(inverse="_inverse_reconcile_data_info")
     reconcile_mode = fields.Selection(
@@ -196,6 +200,7 @@ class AccountBankStatementLine(models.Model):
                 precision_digits=self.currency_id.decimal_places,
             )
             or self.manual_account_id.id != line["account_id"][0]
+            or self.analytic_distribution != line.get("analytic_distribution")
             or self.manual_name != line["name"]
             or (
                 self.manual_partner_id and self.manual_partner_id.name_get()[0] or False
@@ -216,6 +221,7 @@ class AccountBankStatementLine(models.Model):
                             "manual_delete": False,
                             "manual_reference": False,
                             "manual_account_id": False,
+                            "analytic_distribution": False,
                             "manual_amount": False,
                             "manual_name": False,
                             "manual_partner_id": False,
@@ -229,6 +235,7 @@ class AccountBankStatementLine(models.Model):
                     continue
                 else:
                     self.manual_account_id = line["account_id"][0]
+                    self.analytic_distribution = line.get("analytic_distribution")
                     self.manual_amount = line["amount"]
                     self.manual_name = line["name"]
                     self.manual_partner_id = (
@@ -250,6 +257,7 @@ class AccountBankStatementLine(models.Model):
 
     @api.onchange(
         "manual_account_id",
+        "analytic_distribution",
         "manual_partner_id",
         "manual_name",
         "manual_amount",
@@ -270,6 +278,7 @@ class AccountBankStatementLine(models.Model):
                             "account_id": self.manual_account_id.name_get()[0]
                             if self.manual_account_id
                             else [False, _("Undefined")],
+                            "analytic_distribution": self.analytic_distribution,
                             "amount": self.manual_amount,
                             "credit": -self.manual_amount
                             if self.manual_amount < 0
@@ -533,7 +542,7 @@ class AccountBankStatementLine(models.Model):
                         | line
                     )
             move.invalidate_recordset()
-        move._post()
+        move.with_context(validate_analytic=True)._post(soft=False)
         for _account, lines in to_reconcile.items():
             lines.reconcile()
 
@@ -554,7 +563,7 @@ class AccountBankStatementLine(models.Model):
                 ]
             }
         )
-        self.move_id.action_post()
+        self.move_id.with_context(validate_analytic=True)._post(soft=False)
 
     def _unreconcile_bank_line_keep(self, data):
         raise UserError(_("Keep suspense move lines mode cannot be unreconciled"))
