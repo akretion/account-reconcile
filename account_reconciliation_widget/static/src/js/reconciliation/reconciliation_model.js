@@ -155,21 +155,6 @@ odoo.define("account.ReconciliationModel", function (require) {
                 }
             );
 
-            // Onchange the partner if not already set on the statement line.
-            if (
-                !line.st_line.partner_id &&
-                line.reconciliation_proposition &&
-                line.reconciliation_proposition.length == 1 &&
-                prop.partner_id &&
-                line.type === undefined
-            ) {
-                return this.changePartner(
-                    handle,
-                    {id: prop.partner_id, display_name: prop.partner_name},
-                    true
-                );
-            }
-
             return Promise.all([
                 this._computeLine(line),
                 this._performMoveLine(
