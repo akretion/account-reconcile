@@ -151,13 +151,48 @@ class AccountMoveLineReconcileManual(models.TransientModel):
         total_debit = total_credit = 0.0
         partner_set = set()
         currencies = move_lines.currency_id
-        currency = len(currencies) == 1 and currencies or ccur
+        # Choose the currency in which the reconciliation will be made. Odoo does the
+        # following (in account.move.line _prepare_reconciliation_single_partial) :
+        # 1) 1 foreign currency with company currency, if the account is payable
+        # or receivable reconciliation will be done in foreign currency
+        # 2) 1 foreign currency with company currency, if account is not payable
+        # or receivable, reconciliation is done in company currency
+        # 3) if there are 2 or more foreign currency, reconciliation is done in Euro
+        # When there is only 1 currency involved, this currency is chosen of course.
+        if len(currencies) == 1:
+            currency = currencies
+        elif len(currencies) == 2 and ccur in currencies:
+            if move_lines[0].account_type in ("asset_receivable", "liability_payable"):
+                currency = currencies.filtered(lambda cur: cur != ccur)
+            else:
+                currency = ccur
+        else:
+            currency = ccur
         is_foreign_currency = currency != ccur
         for line in move_lines:
             count += 1
             if is_foreign_currency:
-                debit = line.amount_currency > 0.0 and line.amount_currency or 0.0
-                credit = line.amount_currency < 0.0 and abs(line.amount_currency) or 0.0
+                if line.currency_id == currency:
+                    debit = line.amount_currency > 0.0 and line.amount_currency or 0.0
+                    credit = (
+                        line.amount_currency < 0.0 and abs(line.amount_currency) or 0.0
+                    )
+                else:
+                    rate_date = (
+                        line.move_id.is_invoice(include_receipts=True)
+                        and line.move_id.invoice_date
+                        or line.date
+                    )
+                    debit = (
+                        line.debit > 0.0
+                        and ccur._convert(line.debit, currency, company, rate_date)
+                        or 0.0
+                    )
+                    credit = (
+                        line.credit > 0.0
+                        and ccur._convert(line.credit, currency, company, rate_date)
+                        or 0.0
+                    )
             else:
                 debit = line.debit
                 credit = line.credit
