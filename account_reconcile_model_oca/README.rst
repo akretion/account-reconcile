@@ -58,13 +58,13 @@ Authors
 Contributors
 ------------
 
--  Dixmit
+- Dixmit
 
-   -  Enric Tobella
+  - Enric Tobella
 
--  Trobz <https://www.trobz.com/>
+- Trobz <https://www.trobz.com/>
 
-   -  Do Anh Duy <duyda@trobz.com>
+  - Do Anh Duy <duyda@trobz.com>
 
 Other credits
 -------------

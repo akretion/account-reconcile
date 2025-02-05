@@ -105,11 +105,12 @@ class AccountReconcileModel(models.Model):
         base_line_dict["tax_tag_ids"] = [(6, 0, res["base_tags"])]
         return new_aml_dicts
 
-    def _get_write_off_move_lines_dict(self, residual_balance, partner_id):
+    def _get_write_off_move_lines_dict(self, residual_balance, partner_id, label=None):
         """Get move.lines dict corresponding to the reconciliation model's write-off
         lines.
         :param residual_balance: The residual balance of the account on the manual
           reconciliation widget.
+        :param label: String used for regex type, for example the statement line label.
         :return: A list of dict representing move.lines to be created corresponding to
           the write-off lines.
         """
@@ -131,7 +132,13 @@ class AccountReconcileModel(models.Model):
                 balance = currency.round(
                     line.amount * (1 if residual_balance > 0.0 else -1)
                 )
-
+            elif line.amount_type == "regex" and label:
+                match = re.search(line.amount_string, label)
+                if match:
+                    balance = currency.round(
+                        float(match.group(1).replace(self.decimal_separator, "."))
+                        * (1 if residual_balance > 0.0 else -1)
+                    )
             if currency.is_zero(balance):
                 continue
 
