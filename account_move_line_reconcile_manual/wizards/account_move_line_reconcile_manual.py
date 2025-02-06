@@ -207,16 +207,14 @@ class AccountMoveLineReconcileManual(models.TransientModel):
             debit = bal * -1
             credit = 0
         payment_term_line_vals = {
-            "display_type": "payment_term",
             "account_id": self.account_id.id,
             "partner_id": self.partner_id and self.partner_id.id or False,
         }
 
         product_line_vals = {
-            "display_type": "product",
             "account_id": self.writeoff_account_id.id,
             "partner_id": self.partner_id and self.partner_id.id or False,
-            "analytic_distribution": self.writeoff_analytic_distribution,
+            "analytic_account_id": self.writeoff_analytic_account_id.id or False,
         }
         if is_foreign_currency:
             payment_term_line_vals.update(
