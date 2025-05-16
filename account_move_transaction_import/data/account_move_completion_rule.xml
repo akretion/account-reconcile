@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+
+    <record
+        id="account_move_completion_rule_transaction"
+        model="account.move.completion.rule"
+    >
+        <field
+            name="name"
+        >Match from line name (based on payment transaction reference)</field>
+        <field name="sequence">70</field>
+        <field name="function_to_call">get_from_name_and_payment_transaction</field>
+    </record>
+
+</odoo>
