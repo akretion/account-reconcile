@@ -212,7 +212,10 @@ class AccountMoveLineReconcileManual(models.TransientModel):
     def full_reconcile(self):
         self.ensure_one()
         self.move_line_ids.remove_move_reconcile()
-        res = self.move_line_ids.with_context(no_exchange_difference=True).reconcile()
+        no_exchange_difference = len(self.move_line_ids.currency_id) > 1 or False
+        res = self.move_line_ids.with_context(
+            no_exchange_difference=no_exchange_difference
+        ).reconcile()
         if not res.get("full_reconcile"):
             raise UserError(_("Full reconciliation failed. It should never happen!"))
         action = {
@@ -300,7 +303,10 @@ class AccountMoveLineReconcileManual(models.TransientModel):
         )
         assert len(to_rec_woff_line) == 1
         to_rec_lines = self.move_line_ids + to_rec_woff_line
-        res = to_rec_lines.with_context(no_exchange_difference=True).reconcile()
+        no_exchange_difference = len(self.move_line_ids.currency_id) > 1 or False
+        res = to_rec_lines.with_context(
+            no_exchange_difference=no_exchange_difference
+        ).reconcile()
         if not res.get("full_reconcile"):
             raise UserError(_("Full reconciliation failed. It should never happen!"))
         action = {
