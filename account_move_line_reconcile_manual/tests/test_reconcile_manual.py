@@ -175,8 +175,11 @@ class TestReconcileManual(SavepointCase):
         self.assertFalse(self.ccur.compare_amounts(wiz1.total_credit, 95))
         self.assertEqual(wiz1.writeoff_type, "expense")
         wiz1.partial_reconcile()
+        self.assertEqual(self.line1.amount_residual, 5.0)
+        self.assertTrue(self.line2.reconciled)
 
         # reconcile with write-off
+        lines_to_rec.remove_move_reconcile()
         wiz2 = (
             self.env["account.move.line.reconcile.manual"]
             .with_context(active_model="account.move.line", active_ids=lines_to_rec.ids)
