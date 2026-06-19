@@ -60,52 +60,6 @@ class TestAccountReconcileTransactionRef(SavepointCase):
         )
         cls.cust_invoice.action_invoice_open()
 
-    def test_mass_reconcile_transaction_ref_vs_ref(self):
-        self.assertEqual(self.cust_invoice.state, "open")
-        self.assertEqual(self.cust_invoice.transaction_id, "test_transaction_id")
-        bank_journal = self.env["account.journal"].search(
-            [("type", "=", "sale")], limit=1
-        )
-
-        # Create payment
-        payment = self.env["account.payment"].create(
-            {
-                "payment_type": "inbound",
-                "partner_type": "customer",
-                "partner_id": self.partner.id,
-                "journal_id": bank_journal.id,
-                "amount": 1000.0,
-                "communication": "test_transaction_id",
-                "payment_method_id": self.env["account.payment.method"]
-                .search([("name", "=", "Manual")], limit=1)
-                .id,
-            }
-        )
-        self.assertEqual(payment.state, "draft")
-        payment.post()
-        self.assertEqual(payment.state, "posted")
-
-        reconcile = self.env["account.mass.reconcile"].create(
-            {
-                "name": "Test reconcile transaction id",
-                "account": self.account_receivable.id,
-                "reconcile_method": [
-                    (
-                        0,
-                        0,
-                        {
-                            "name": "mass.reconcile.advanced.trans_ref_vs_ref",
-                            "date_base_on": "newest",
-                        },
-                    )
-                ],
-            }
-        )
-        count = reconcile.unreconciled_count
-        reconcile.run_reconcile()
-        self.assertEqual(self.cust_invoice.state, "paid")
-        self.assertEqual(reconcile.unreconciled_count, count - 2)
-
     def test_mass_reconcile_transaction_ref(self):
         self.assertEqual(self.cust_invoice.state, "open")
         self.assertEqual(self.cust_invoice.transaction_id, "test_transaction_id")

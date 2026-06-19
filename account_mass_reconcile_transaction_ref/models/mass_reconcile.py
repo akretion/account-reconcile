@@ -14,9 +14,5 @@ class AccountMassReconcileMethod(models.Model):
                 "mass.reconcile.advanced.transaction_ref",
                 "Advanced. Partner and Transaction Ref.",
             ),
-            (
-                "mass.reconcile.advanced.trans_ref_vs_ref",
-                "Advanced. Partner and Transaction Ref. vs Ref.",
-            ),
         ]
         return methods

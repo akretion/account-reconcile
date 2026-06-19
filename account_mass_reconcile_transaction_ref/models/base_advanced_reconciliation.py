@@ -12,5 +12,5 @@ class MassReconcileAdvanced(models.AbstractModel):
         An extra column aliased as ``key`` should be defined
         in each query."""
         aml_cols = super()._base_columns()
-        aml_cols.append("account_move_line.transaction_ref")
+        aml_cols.append("account_move_line.transaction_id")
         return aml_cols

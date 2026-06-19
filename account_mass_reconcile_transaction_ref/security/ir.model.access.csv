@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mass_reconcile_advanced_transaction_ref_acc_user,mass.reconcile.advanced.transaction_ref,model_mass_reconcile_advanced_transaction_ref,account.group_account_user,1,1,1,1
