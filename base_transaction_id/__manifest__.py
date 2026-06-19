@@ -14,6 +14,7 @@
     "data": [
         "views/invoice.xml",
         "views/sale.xml",
+        "views/account_move_line.xml",
     ],
     "installable": True,
     "license": "AGPL-3",
