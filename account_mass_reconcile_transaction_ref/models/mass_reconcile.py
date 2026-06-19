@@ -4,16 +4,19 @@ from odoo import api, models
 
 
 class AccountMassReconcileMethod(models.Model):
-
-    _inherit = 'account.mass.reconcile.method'
+    _inherit = "account.mass.reconcile.method"
 
     @api.model
     def _get_reconcilation_methods(self):
         methods = super()._get_reconcilation_methods()
         methods += [
-            ('mass.reconcile.advanced.transaction_ref',
-             'Advanced. Partner and Transaction Ref.'),
-            ('mass.reconcile.advanced.trans_ref_vs_ref',
-             'Advanced. Partner and Transaction Ref. vs Ref.'),
+            (
+                "mass.reconcile.advanced.transaction_ref",
+                "Advanced. Partner and Transaction Ref.",
+            ),
+            (
+                "mass.reconcile.advanced.trans_ref_vs_ref",
+                "Advanced. Partner and Transaction Ref. vs Ref.",
+            ),
         ]
         return methods
