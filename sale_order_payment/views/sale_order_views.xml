@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Akretion (https://www.akretion.com)
+     License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html). -->
+<odoo>
+    <record id="view_order_form_sale_order_payment" model="ir.ui.view">
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button
+                    name="action_view_payment_lines"
+                    type="object"
+                    class="oe_stat_button"
+                    icon="fa-money"
+                    invisible="payment_line_count == 0"
+                >
+                    <field
+                        name="payment_line_count"
+                        widget="statinfo"
+                        string="Payment Entries"
+                    />
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='tax_totals']" position="after">
+                <div class="oe_subtotal_footer oe_right" invisible="is_paid">
+                    <span class="text-danger">
+                        To pay:
+                        <field name="amount_due" widget="monetary" class="fw-bolder" />
+                    </span>
+                </div>
+                <div class="oe_subtotal_footer oe_right" invisible="not is_paid">
+                    <span class="text-success">
+                        <i class="fa fa-check" /> Paid:
+                        <field name="paid_amount" widget="monetary" class="fw-bolder" />
+                    </span>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
