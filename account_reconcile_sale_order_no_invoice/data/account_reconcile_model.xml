@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Akretion (https://www.akretion.com)
+     License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html). -->
+<odoo noupdate="1">
+    <!--
+        Rule matching sale orders from the reference of the bank statement
+        line (the sale order number, or tokens of the statement label when
+        token matching is enabled on the rule).
+
+        The rule record is created for the main company at installation; on
+        multi-company databases, duplicate it for the other companies
+        (Invoicing > Configuration > Banks: Reconciliation Models).
+
+        Behaviour (invoicing the order or only registering the payment on it)
+        is driven by the company setting account_reconcile_sale_order_mode.
+    -->
+    <record id="account_reconcile_model_so_reference" model="account.reconcile.model">
+        <field name="name">Match sale orders from reference</field>
+        <field name="rule_type">sale_order_matching</field>
+    </record>
+</odoo>

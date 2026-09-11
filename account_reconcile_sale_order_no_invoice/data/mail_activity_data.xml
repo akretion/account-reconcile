@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Akretion (https://www.akretion.com)
+     License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html). -->
+<odoo>
+    <!--
+        Activity type used to mark a sale order as paid when its payment is
+        registered from the bank statement reconciliation ("payment" mode of
+        account_reconcile_sale_order_mode).
+    -->
+    <record id="activity_type_sale_order_paid" model="mail.activity.type">
+        <field name="name">Commande payée</field>
+        <field name="summary">Commande payée</field>
+        <field name="delay_count">0</field>
+        <field name="delay_unit">days</field>
+        <field name="delay_from">current_date</field>
+        <field name="icon">fa-money</field>
+    </record>
+</odoo>
