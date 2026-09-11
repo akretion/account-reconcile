@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Akretion (https://www.akretion.com)
+     License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html). -->
+<odoo noupdate="1">
+    <!--
+        Rule matching sale orders from the transaction ID of the payment
+        provider, when the reference of the statement lines holds that
+        transaction ID (payment provider imports).
+
+        The rule record is created for the main company at installation; on
+        multi-company databases, duplicate it for the other companies
+        (Invoicing > Configuration > Banks: Reconciliation Models).
+    -->
+    <record
+        id="account_reconcile_model_so_transaction_id"
+        model="account.reconcile.model"
+    >
+        <field name="name">Match sale orders from transaction ID</field>
+        <field name="rule_type">sale_order_matching</field>
+        <field name="sale_order_matching_transaction_id" eval="True" />
+    </record>
+</odoo>
