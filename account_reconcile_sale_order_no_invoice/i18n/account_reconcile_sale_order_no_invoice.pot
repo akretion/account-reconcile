@@ -1,0 +1,98 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* account_reconcile_sale_order_no_invoice
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: account_reconcile_sale_order_no_invoice
+#. odoo-python
+#: code:addons/account_reconcile_sale_order_no_invoice/models/account_bank_statement_line.py:0
+msgid ""
+"<p>The sale order <b>%(order)s</b> has been marked as paid during the bank "
+"reconciliation of the statement line <a "
+"href='/web#model=account.bank.statement.line&amp;id=%(line_id)s'>%(line_name)s</a>"
+" of %(date)s (amount %(amount)s).</p><p>The payment is still to be "
+"reconciled with the invoice once the sale order is invoiced.</p>"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model,name:account_reconcile_sale_order_no_invoice.model_account_bank_statement_line
+msgid "Bank Statement Line"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model_terms:ir.ui.view,arch_db:account_reconcile_sale_order_no_invoice.res_config_settings_view_form_sale_order_payment_reconcile
+msgid ""
+"Behaviour when a bank statement line is reconciled against a sale order "
+"(chosen in the \"Sales orders\" tab of the reconciliation widget or matched "
+"by a sale order reconciliation rule): either register the payment on the "
+"order without invoicing it, or invoice the order at reconciliation (OCA "
+"account_reconcile_sale_order behaviour)."
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model.fields,help:account_reconcile_sale_order_no_invoice.field_res_company__account_reconcile_sale_order_mode
+#: model:ir.model.fields,help:account_reconcile_sale_order_no_invoice.field_res_config_settings__account_reconcile_sale_order_mode
+msgid ""
+"Behaviour when a bank statement line is reconciled against a sale order (selected manually in the \"Sales orders\" tab or matched automatically by a sale_order_matching rule).\n"
+"- Register the payment on the sale order: no invoice is created, a receivable counterpart journal item labelled with the sale order name is created and linked to the order, which is marked as paid.\n"
+"- Invoice the sale order at reconciliation: the sale order is invoiced and the created invoice is reconciled with the payment (OCA account_reconcile_sale_order behaviour)."
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model,name:account_reconcile_sale_order_no_invoice.model_res_company
+msgid "Companies"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model,name:account_reconcile_sale_order_no_invoice.model_res_config_settings
+msgid "Config Settings"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model.fields.selection,name:account_reconcile_sale_order_no_invoice.selection__res_company__account_reconcile_sale_order_mode__invoice
+msgid "Invoice the sale order at reconciliation"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model:account.reconcile.model,name:account_reconcile_sale_order_no_invoice.account_reconcile_model_so_reference
+msgid "Match sale orders from reference"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model.fields,field_description:account_reconcile_sale_order_no_invoice.field_res_company__account_reconcile_sale_order_mode
+#: model:ir.model.fields,field_description:account_reconcile_sale_order_no_invoice.field_res_config_settings__account_reconcile_sale_order_mode
+#: model_terms:ir.ui.view,arch_db:account_reconcile_sale_order_no_invoice.res_config_settings_view_form_sale_order_payment_reconcile
+msgid "Reconcile sale orders"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model.fields.selection,name:account_reconcile_sale_order_no_invoice.selection__res_company__account_reconcile_sale_order_mode__payment
+msgid "Register the payment on the sale order"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model_terms:ir.ui.view,arch_db:account_reconcile_sale_order_no_invoice.res_config_settings_view_form_sale_order_payment_reconcile
+msgid "Sale Orders"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model:mail.activity.type,name:account_reconcile_sale_order_no_invoice.activity_type_sale_order_paid
+#: model:mail.activity.type,summary:account_reconcile_sale_order_no_invoice.activity_type_sale_order_paid
+msgid "Sale order paid"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#. odoo-python
+#: code:addons/account_reconcile_sale_order_no_invoice/models/account_bank_statement_line.py:0
+msgid "Sale order paid by bank reconciliation %(reference)s"
+msgstr ""
