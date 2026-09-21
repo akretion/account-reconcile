@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Akretion (https://www.akretion.com)
+     License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html). -->
+<odoo>
+    <record id="view_order_form_sale_order_payment" model="ir.ui.view">
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button
+                    name="action_view_payment_lines"
+                    type="object"
+                    class="oe_stat_button"
+                    icon="fa-money"
+                    invisible="payment_line_count == 0"
+                >
+                    <field
+                        name="payment_line_count"
+                        widget="statinfo"
+                        string="Payment Entries"
+                    />
+                </button>
+            </xpath>
+            <!--
+                Display the payment information right below the total amount of
+                the order (devis/commande).
+            -->
+            <xpath
+                expr="//group[@name='sale_total']/field[@name='tax_totals']"
+                position="after"
+            >
+                <div
+                    class="d-flex justify-content-end border-top pt-1"
+                    invisible="not payment_line_count or is_paid"
+                >
+                    <span class="o_form_label text-danger">To pay</span>
+                    <field
+                        name="amount_due"
+                        nolabel="1"
+                        widget="monetary"
+                        class="fw-bolder text-danger"
+                    />
+                </div>
+                <div
+                    class="d-flex justify-content-end border-top pt-1"
+                    invisible="not payment_line_count or not is_paid"
+                >
+                    <span class="o_form_label text-success">Paid</span>
+                    <field
+                        name="paid_amount"
+                        nolabel="1"
+                        widget="monetary"
+                        class="fw-bolder text-success"
+                    />
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
