@@ -1,0 +1,174 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* account_reconcile_payment_inquiry
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: account_reconcile_payment_inquiry
+#: model_terms:ir.ui.view,arch_db:account_reconcile_payment_inquiry.payment_inquiry_view_form
+msgid "Answer and Notify"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:ir.model.fields.selection,name:account_reconcile_payment_inquiry.selection__account_bank_statement_line__payment_inquiry_state__answered
+msgid "Answered"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model_terms:ir.ui.view,arch_db:account_reconcile_payment_inquiry.bank_statement_line_form_reconcile_view_payment_inquiry
+msgid "Ask for Identification"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:ir.model,name:account_reconcile_payment_inquiry.model_account_bank_statement_line
+msgid "Bank Statement Line"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model_terms:ir.ui.view,arch_db:account_reconcile_payment_inquiry.account_bank_statement_line_search_payment_inquiry
+msgid "Hide Payment Inquiries To Answer"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model_terms:ir.ui.view,arch_db:account_reconcile_payment_inquiry.account_bank_statement_line_search_payment_inquiry
+msgid "Hide the bank transactions for which the Sales Administration has been asked to identify the payment and has not answered yet."
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:ir.model.fields,field_description:account_reconcile_payment_inquiry.field_account_bank_statement_line__payment_inquiry_note
+msgid "Inquiry Answer"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:ir.model.fields,field_description:account_reconcile_payment_inquiry.field_account_bank_statement_line__payment_inquiry_answer_user_id
+msgid "Inquiry Answered By"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:ir.model.fields,field_description:account_reconcile_payment_inquiry.field_account_bank_statement_line__payment_inquiry_answer_date
+msgid "Inquiry Answered On"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:ir.model.fields,field_description:account_reconcile_payment_inquiry.field_account_bank_statement_line__payment_inquiry_user_id
+msgid "Inquiry Asked By"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:ir.model.fields,field_description:account_reconcile_payment_inquiry.field_account_bank_statement_line__payment_inquiry_date
+msgid "Inquiry Asked On"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model_terms:ir.actions.act_window,help:account_reconcile_payment_inquiry.payment_inquiry_action
+msgid "No payment inquiry to answer"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model_terms:ir.ui.view,arch_db:account_reconcile_payment_inquiry.payment_inquiry_view_form
+msgid "Payment"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:ir.actions.act_window,name:account_reconcile_payment_inquiry.payment_inquiry_action
+#: model:ir.ui.menu,name:account_reconcile_payment_inquiry.payment_inquiry_menu
+msgid "Payment Inquiries"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:ir.model.fields,field_description:account_reconcile_payment_inquiry.field_account_bank_statement_line__payment_inquiry_state
+#: model:res.groups,name:account_reconcile_payment_inquiry.group_payment_inquiry
+#: model_terms:ir.ui.view,arch_db:account_reconcile_payment_inquiry.payment_inquiry_view_form
+msgid "Payment Inquiry"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model_terms:ir.ui.view,arch_db:account_reconcile_payment_inquiry.account_bank_statement_line_search_payment_inquiry
+msgid "Payment Inquiry Answered"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model_terms:ir.ui.view,arch_db:account_reconcile_payment_inquiry.account_bank_statement_line_search_payment_inquiry
+msgid "Payment Inquiry To Answer"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#. odoo-python
+#: code:addons/account_reconcile_payment_inquiry/models/account_bank_statement_line.py:0
+msgid "Payment identification: %(label)s"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#. odoo-python
+#: code:addons/account_reconcile_payment_inquiry/models/account_bank_statement_line.py:0
+msgid ""
+"Payment identified by %(user)s - the user who asked for the identification "
+"receives an activity."
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#. odoo-python
+#: code:addons/account_reconcile_payment_inquiry/models/account_bank_statement_line.py:0
+msgid "Please write what this payment corresponds to before answering."
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#. odoo-python
+#: code:addons/account_reconcile_payment_inquiry/models/account_bank_statement_line.py:0
+msgid "There is no user to notify for this payment inquiry."
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:ir.model.fields.selection,name:account_reconcile_payment_inquiry.selection__account_bank_statement_line__payment_inquiry_state__to_answer
+msgid "To Answer"
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:ir.model.fields,help:account_reconcile_payment_inquiry.field_account_bank_statement_line__payment_inquiry_state
+msgid ""
+"Use the button 'Ask for Identification' of the bank reconciliation widget to"
+" ask the Sales Administration to identify this payment. The state remains "
+"'To Answer' until the Sales Administration writes what the payment "
+"corresponds to."
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:ir.model.fields,help:account_reconcile_payment_inquiry.field_account_bank_statement_line__payment_inquiry_user_id
+msgid "User who asked for the identification of this payment."
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:res.groups,comment:account_reconcile_payment_inquiry.group_payment_inquiry
+msgid ""
+"Users of this group answer the payment inquiries: they see the unidentified "
+"payments and write what those payments correspond to (the button 'Ask for "
+"Identification' is available in the bank reconciliation widget for the "
+"accountants)."
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model:ir.model.fields,help:account_reconcile_payment_inquiry.field_account_bank_statement_line__payment_inquiry_note
+msgid "What this payment corresponds to, written by the Sales Administration."
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#: model_terms:ir.ui.view,arch_db:account_reconcile_payment_inquiry.payment_inquiry_view_form
+msgid "Write here what this payment corresponds to..."
+msgstr ""
+
+#. module: account_reconcile_payment_inquiry
+#. odoo-python
+#: code:addons/account_reconcile_payment_inquiry/models/account_bank_statement_line.py:0
+msgid ""
+"You can only answer payment inquiries: you are not allowed to modify the "
+"other information of this bank transaction (%(fields)s)."
+msgstr ""

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Copyright 2026 Akretion France (https://www.akretion.com/)
+  @author: Benoît Guillot <benoit.guillot@akretion.com>
+  License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
+-->
+<odoo>
+    <record id="payment_inquiry_view_list" model="ir.ui.view">
+        <field name="name">account.bank.statement.line.payment.inquiry.list</field>
+        <field name="model">account.bank.statement.line</field>
+        <field name="arch" type="xml">
+            <list create="false" delete="false">
+                <field name="date" />
+                <field name="journal_id" />
+                <field name="payment_ref" />
+                <field name="partner_id" />
+                <field name="amount" />
+                <field name="transaction_type" optional="hide" />
+                <field name="payment_inquiry_user_id" optional="show" />
+                <field
+                    name="payment_inquiry_date"
+                    optional="hide"
+                    widget="remaining_days"
+                />
+                <field
+                    name="payment_inquiry_state"
+                    widget="badge"
+                    decoration-info="payment_inquiry_state == 'to_answer'"
+                    decoration-success="payment_inquiry_state == 'answered'"
+                />
+                <field name="payment_inquiry_note" optional="show" />
+                <field name="currency_id" column_invisible="True" />
+            </list>
+        </field>
+    </record>
+
+    <record id="payment_inquiry_view_form" model="ir.ui.view">
+        <field name="name">account.bank.statement.line.payment.inquiry.form</field>
+        <field name="model">account.bank.statement.line</field>
+        <field name="arch" type="xml">
+            <form create="false" delete="false">
+                <header>
+                    <button
+                        name="action_payment_inquiry_answer"
+                        type="object"
+                        string="Answer and Notify"
+                        class="btn-primary"
+                        invisible="payment_inquiry_state != 'to_answer'"
+                    />
+                    <field
+                        name="payment_inquiry_state"
+                        widget="statusbar"
+                        statusbar_visible="to_answer,answered"
+                    />
+                </header>
+                <sheet>
+                    <group>
+                        <group name="payment" string="Payment">
+                            <field name="date" readonly="1" />
+                            <field name="journal_id" readonly="1" />
+                            <field name="payment_ref" readonly="1" />
+                            <field name="partner_id" readonly="1" />
+                            <field name="amount" readonly="1" />
+                            <field name="transaction_type" readonly="1" />
+                            <field name="currency_id" invisible="1" />
+                        </group>
+                        <group name="inquiry" string="Payment Inquiry">
+                            <field name="payment_inquiry_user_id" readonly="1" />
+                            <field name="payment_inquiry_date" readonly="1" />
+                            <field
+                                name="payment_inquiry_note"
+                                placeholder="Write here what this payment corresponds to..."
+                                readonly="payment_inquiry_state != 'to_answer'"
+                            />
+                            <field name="payment_inquiry_answer_user_id" readonly="1" />
+                            <field name="payment_inquiry_answer_date" readonly="1" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="payment_inquiry_action" model="ir.actions.act_window">
+        <field name="name">Payment Inquiries</field>
+        <field name="res_model">account.bank.statement.line</field>
+        <field name="domain">[('payment_inquiry_state', '!=', False)]</field>
+        <field name="context">{'search_default_payment_inquiry_to_answer': 1}</field>
+        <field
+            name="search_view_id"
+            ref="account_statement_base.account_bank_statement_line_search"
+        />
+        <field name="view_mode">list,form</field>
+        <field
+            name="view_ids"
+            eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('payment_inquiry_view_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('payment_inquiry_view_form')})]"
+        />
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No payment inquiry to answer
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="payment_inquiry_menu"
+        name="Payment Inquiries"
+        action="payment_inquiry_action"
+        parent="sale.sale_order_menu"
+        groups="group_payment_inquiry"
+        sequence="25"
+    />
+</odoo>

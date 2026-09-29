@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Copyright 2026 Akretion France (https://www.akretion.com/)
+  @author: Benoît Guillot <benoit.guillot@akretion.com>
+  License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
+-->
+<odoo>
+    <record
+        id="bank_statement_line_form_reconcile_view_payment_inquiry"
+        model="ir.ui.view"
+    >
+        <field name="name">
+            account.bank.statement.line.reconcile.payment.inquiry
+        </field>
+        <field name="model">account.bank.statement.line</field>
+        <field
+            name="inherit_id"
+            ref="account_reconcile_oca.bank_statement_line_form_reconcile_view"
+        />
+        <field name="arch" type="xml">
+            <field name="checked" position="after">
+                <field name="payment_inquiry_state" invisible="1" />
+                <field name="payment_inquiry_user_id" invisible="1" />
+            </field>
+            <button name="action_checked" position="after">
+                <button
+                    name="action_payment_inquiry_ask"
+                    type="object"
+                    string="Ask for Identification"
+                    class="btn btn-secondary mx-1"
+                    groups="account.group_account_basic"
+                    invisible="payment_inquiry_state == 'to_answer'"
+                />
+            </button>
+            <field name="reconcile_data_info" position="after">
+                <div
+                    class="alert alert-info"
+                    role="alert"
+                    invisible="payment_inquiry_state != 'answered'"
+                >
+                    <field name="payment_inquiry_note" readonly="1" nolabel="1" />
+                </div>
+            </field>
+        </field>
+    </record>
+
+    <record id="account_bank_statement_line_search_payment_inquiry" model="ir.ui.view">
+        <field name="name">
+            account.bank.statement.line.search.payment.inquiry
+        </field>
+        <field name="model">account.bank.statement.line</field>
+        <field
+            name="inherit_id"
+            ref="account_statement_base.account_bank_statement_line_search"
+        />
+        <field name="arch" type="xml">
+            <filter name="date" position="before">
+                <filter
+                    name="payment_inquiry_not_pending"
+                    string="Hide Payment Inquiries To Answer"
+                    domain="[('payment_inquiry_state', '!=', 'to_answer')]"
+                    help="Hide the bank transactions for which the Sales Administration has been asked to identify the payment and has not answered yet."
+                />
+                <filter
+                    name="payment_inquiry_to_answer"
+                    string="Payment Inquiry To Answer"
+                    domain="[('payment_inquiry_state', '=', 'to_answer')]"
+                />
+                <filter
+                    name="payment_inquiry_answered"
+                    string="Payment Inquiry Answered"
+                    domain="[('payment_inquiry_state', '=', 'answered')]"
+                />
+            </filter>
+        </field>
+    </record>
+
+    <!-- The bank reconciliation view (and the 'Transactions' view of the bank
+         journal dashboard, which is the same view) hides by default the bank
+         transactions for which the Sales Administration has been asked to
+         identify the payment and has not answered yet: the accountant doesn't
+         have to reconcile them before the answer. Such a transaction comes back
+         as soon as the Sales Administration answers (the accountant receives an
+         activity) and the accountant can also uncheck the filter in the search
+         bar of the reconciliation view to see all the transactions.
+         The context below is the one of account_reconcile_oca, to which
+         'search_default_payment_inquiry_not_pending' is added. -->
+    <record
+        id="account_reconcile_oca.action_bank_statement_line_reconcile"
+        model="ir.actions.act_window"
+    >
+        <field
+            name="context"
+        >{'default_journal_id': active_id, 'search_default_not_reconciled': True, 'search_default_payment_inquiry_not_pending': True, 'view_ref': 'account_reconcile_oca.bank_statement_line_form_reconcile_view'}</field>
+    </record>
+
+    <record
+        id="account_reconcile_oca.action_bank_statement_line_reconcile_all"
+        model="ir.actions.act_window"
+    >
+        <field
+            name="context"
+        >{'default_journal_id': active_id, 'search_default_payment_inquiry_not_pending': True, 'view_ref': 'account_reconcile_oca.bank_statement_line_form_reconcile_view'}</field>
+    </record>
+</odoo>
