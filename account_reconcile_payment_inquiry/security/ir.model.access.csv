@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_account_bank_statement_line_payment_inquiry,account.bank.statement.line payment inquiry,account.model_account_bank_statement_line,group_payment_inquiry,1,1,0,0
+access_account_journal_payment_inquiry,account.journal payment inquiry,account.model_account_journal,group_payment_inquiry,1,0,0,0

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Copyright 2026 Akretion France (https://www.akretion.com/)
+  @author: Benoît Guillot <benoit.guillot@akretion.com>
+  License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
+-->
+<odoo>
+    <record id="group_payment_inquiry" model="res.groups">
+        <field name="name">Payment Inquiry</field>
+        <field
+            name="comment"
+        >Users of this group answer the payment inquiries: they see the unidentified payments and write what those payments correspond to.</field>
+    </record>
+</odoo>

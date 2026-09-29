@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Copyright 2026 Akretion France (https://www.akretion.com/)
+  @author: Benoît Guillot <benoit.guillot@akretion.com>
+  License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
+-->
+<odoo>
+    <!-- Set here the recipients (E-mail To or Partner To) of the request: the
+         users of the Payment Inquiry group are notified by this e-mail. The
+         e-mail is queued, it is sent by the 'Mail: Email Queue Manager'
+         scheduled action. -->
+    <record id="payment_inquiry_mail_template" model="mail.template">
+        <field name="name">Payment Inquiry: Ask for Identification</field>
+        <field name="model_id" ref="account.model_account_bank_statement_line" />
+        <field name="subject">Payment identification: {{ object.payment_ref }}</field>
+        <field
+            name="email_from"
+        >{{ (user.email_formatted or object.company_id.email_formatted) }}</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px">
+                <p style="margin: 0px; padding: 0px; font-size: 13px">
+                    Hello,
+                    <br />
+                    <br />
+                    The accounting team asks you to identify this bank
+                    transaction:
+                </p>
+                <ul style="margin-bottom: 0">
+                    <li>Date: <t t-out="object.date" /></li>
+                    <li>Journal: <t t-out="object.journal_id.name" /></li>
+                    <li>Label: <t t-out="object.payment_ref" /></li>
+                    <li t-if="object.partner_id or object.partner_name">Partner: <t
+                        t-out="object.partner_id.name or object.partner_name"
+                    /></li>
+                    <li>Amount: <t
+                        t-out="format_amount(object.amount, object.currency_id) or ''"
+                    /></li>
+                </ul>
+                <p style="margin: 0px; padding: 0px; font-size: 13px">
+                    Please write what this payment corresponds to:
+                    <br />
+                    <a
+                    t-attf-href="{{object.get_base_url()}}/odoo/payment-inquiries/{{object.id}}"
+                    t-attf-target="_blank"
+                >Payment Inquiries</a>
+                    <br />
+                    <br />
+                    Thank you.
+                </p>
+            </div>
+        </field>
+    </record>
+</odoo>
