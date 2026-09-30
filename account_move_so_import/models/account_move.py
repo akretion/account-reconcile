@@ -1,6 +1,6 @@
 # Copyright 2011-2019 Camptocamp SA
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
-from odoo import _, fields, models
+from odoo import fields, models
 
 from odoo.addons.account_move_base_import.models.account_move import ErrorTooManyPartner
 
@@ -56,18 +56,20 @@ class AccountMoveCompletionRule(models.Model):
         """
         return self._get_from_name_and_so_generic(line, "reference")
 
-    def _get_from_name_and_so_generic(self, line, search_by):
+    def _get_aml_values_from_sales(self, line, sales):
         res = {}
-        so_obj = self.env["sale.order"]
-        orders = so_obj.search([(search_by, "=", line.name)])
-        if len(orders) > 1:
+        partners = sales.mapped("partner_id")
+        if len(partners) > 1:
             raise ErrorTooManyPartner(
-                _(
-                    'Line named "%s" was matched by more '
-                    "than one partner while looking on SO by ref."
-                )
+                self.env._('Line named "%s" was matched by more than one partner.')
                 % line.name
             )
-        if len(orders) == 1:
-            res["partner_id"] = orders[0].partner_id.id
+        if len(partners) == 1:
+            res["partner_id"] = partners.commercial_partner_id.id or partners.id
+            res["account_id"] = partners.property_account_receivable_id.id
         return res
+
+    def _get_from_name_and_so_generic(self, line, search_by):
+        so_obj = self.env["sale.order"]
+        orders = so_obj.search([(search_by, "=", line.name)])
+        return self._get_aml_values_from_sales(line, orders)
