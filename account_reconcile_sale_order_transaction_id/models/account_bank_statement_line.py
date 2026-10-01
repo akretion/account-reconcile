@@ -15,6 +15,15 @@ class AccountBankStatementLine(models.Model):
         )
         if sale_order.transaction_id:
             res["transaction_id"] = sale_order.transaction_id
+            # we want to keep the amount of transaction, if transaction ref is here
+            # it should not concerns multiple orders.
+            if (
+                self.company_id.account_reconcile_sale_order_mode == "payment"
+                and sale_order.transaction_id in self.payment_ref
+                and self.amount != sale_order.amount_total
+            ):
+                res["amount"] = -self.amount
+                res["credit"] = self.amount
         return res
 
     def _reconcile_move_line_vals(self, line, move_id=False):
