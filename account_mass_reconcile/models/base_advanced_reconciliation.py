@@ -5,7 +5,7 @@
 import logging
 from itertools import product
 
-from odoo import api, models, registry
+from odoo import models
 from odoo.tools.translate import _
 
 _logger = logging.getLogger(__name__)
@@ -236,7 +236,11 @@ class MassReconcileAdvanced(models.AbstractModel):
         return reconciled_ids
 
     def _rec_group_by_chunk(self, reconcile_groups, lines_by_id, chunk_size):
-        """Commit after each chunk
+        """Reconcile the groups by chunk, committing after each chunk
+
+        The reconciliation is done in the current transaction and committed
+        on the current cursor, so that the next method and the history
+        computation, which run on that same cursor, see its result.
 
         :param list reconcile_groups: all groups to reconcile, will be split
         by chunk
@@ -247,26 +251,22 @@ class MassReconcileAdvanced(models.AbstractModel):
         reconciled_ids = []
 
         _logger.info("Reconciling by chunk of %d", chunk_size)
-
-        # Copy and commit current transient model before creating a new cursor
-        # This is required to avoid CacheMiss when using data from `self`
-        # which is created during current transaction.
-        with registry(self.env.cr.dbname).cursor() as new_cr:
-            new_env = api.Environment(new_cr, self.env.uid, self.env.context)
-            self_env = self.with_env(new_env)
-            rec = self_env.create(self.copy_data())
         for i in range(0, len(reconcile_groups), chunk_size):
             chunk = reconcile_groups[i : i + chunk_size]
             _logger.debug("Reconcile group chunk %s", chunk)
             try:
-                with registry(self.env.cr.dbname).cursor() as new_cr:
-                    new_env = api.Environment(new_cr, self.env.uid, self.env.context)
-                    # Re-use the committed transient we just committed
-                    self_env = self.with_env(new_env).browse(rec.id)
-                    reconciled_ids += self_env._rec_group(chunk, lines_by_id)
+                with self.env.cr.savepoint():
+                    reconciled_ids += self._rec_group(chunk, lines_by_id)
             except Exception as e:
                 msg = "Reconciliation failed for group chunk %s with error:\n%s"
                 _logger.exception(msg, chunk, e)
+                continue
+            # pylint: disable=invalid-commit
+            self.env.cr.commit()
+            _logger.info(
+                "Commit the reconciliations after %d group(s)",
+                min(i + chunk_size, len(reconcile_groups)),
+            )
         return reconciled_ids
 
     def _rec_auto_lines_advanced(self, credit_lines, debit_lines):
