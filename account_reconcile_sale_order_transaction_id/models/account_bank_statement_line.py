@@ -1,6 +1,8 @@
 # Copyright 2026 Akretion (https://www.akretion.com)
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 
+import math
+
 from odoo import models
 
 
@@ -20,7 +22,9 @@ class AccountBankStatementLine(models.Model):
             if (
                 self.company_id.account_reconcile_sale_order_mode == "payment"
                 and sale_order.transaction_id in self.payment_ref
-                and self.amount != sale_order.amount_total
+                # If the amount is close, take the amount of the transaction
+                # could be configurable thought, so is the limit
+                and math.isclose(self.amount, sale_order.amount_total, abs_tol=0.05)
             ):
                 res["amount"] = -self.amount
                 res["credit"] = self.amount
