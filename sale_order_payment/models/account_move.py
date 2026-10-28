@@ -1,12 +1,14 @@
 # Copyright 2026 Akretion (https://www.akretion.com)
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 
-from odoo import Command, models
+from odoo import Command, fields, models
 from odoo.tools import format_amount
 
 
 class AccountMove(models.Model):
     _inherit = "account.move"
+
+    journal_type = fields.Selection(related="journal_id.type")
 
     def _post(self, soft=True):
         posted_moves = super()._post(soft=soft)

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Akretion (https://www.akretion.com)
+     License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html). -->
+<odoo>
+    <record id="view_account_move_form" model="ir.ui.view">
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form" />
+        <field name="arch" type="xml">
+            <xpath
+                expr="//field[@name='line_ids']/list/field[@name='name']"
+                position="after"
+            >
+                <field
+                    name="sale_order_id"
+                    optional="show"
+                    column_invisible="parent.journal_type not in ('cash', 'bank', 'credit')"
+                />
+            </xpath>
+        </field>
+    </record>
+</odoo>
