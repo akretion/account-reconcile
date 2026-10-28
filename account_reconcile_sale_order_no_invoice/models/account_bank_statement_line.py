@@ -70,3 +70,17 @@ class AccountBankStatementLine(models.Model):
             if not line.get("name"):
                 vals["name"] = sale_order.name
         return vals
+
+    def _get_reconcile_line_for_sale_order(
+        self, sale_order, kind, reconcile_auxiliary_id
+    ):
+        res = super()._get_reconcile_line_for_sale_order(
+            sale_order, kind, reconcile_auxiliary_id
+        )
+        # in case of refund, we just want to attach the amount on the sale order...
+        if self._get_reconcile_sale_order_mode() == "payment" and self.amount < 0.0:
+            res["amount"] = -self.amount
+            res["credit"] = 0.0
+            res["debit"] = -self.amount
+            res["currency_amount"] = -self.amount
+        return res
