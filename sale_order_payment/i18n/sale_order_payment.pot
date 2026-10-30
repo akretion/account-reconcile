@@ -24,26 +24,8 @@ msgid "<span class=\"o_form_label text-success\">Paid</span>"
 msgstr ""
 
 #. module: sale_order_payment
-#: model:ir.model.fields,help:sale_order_payment.field_res_company__sale_order_payment_writeoff_account_id
-#: model:ir.model.fields,help:sale_order_payment.field_res_config_settings__sale_order_payment_writeoff_account_id
-msgid ""
-"Account used to write off the difference that may remain between the payments registered on a sale order and the receivable of the invoices generated from this order.\n"
-"Leave it empty to disable the automatic write-off: the invoice is then left open so that it can be reconciled manually."
-msgstr ""
-
-#. module: sale_order_payment
 #: model:ir.model.fields,field_description:sale_order_payment.field_sale_order__amount_due
 msgid "Amount Due"
-msgstr ""
-
-#. module: sale_order_payment
-#: model:ir.model,name:sale_order_payment.model_res_company
-msgid "Companies"
-msgstr ""
-
-#. module: sale_order_payment
-#: model:ir.model,name:sale_order_payment.model_res_config_settings
-msgid "Config Settings"
 msgstr ""
 
 #. module: sale_order_payment
@@ -62,27 +44,6 @@ msgid ""
 "Journal items of the payment entries linked to this sale order. Typically "
 "the receivable counterpart items created when the customer payment is "
 "reconciled against the order."
-msgstr ""
-
-#. module: sale_order_payment
-#: model:ir.model.fields,field_description:sale_order_payment.field_res_company__sale_order_payment_writeoff_max_amount
-#: model:ir.model.fields,field_description:sale_order_payment.field_res_config_settings__sale_order_payment_writeoff_max_amount
-msgid "Max Sale Order Payment Write-off Amount"
-msgstr ""
-
-#. module: sale_order_payment
-#: model_terms:ir.ui.view,arch_db:sale_order_payment.res_config_settings_view_form_sale_order_payment
-msgid "Maximum difference"
-msgstr ""
-
-#. module: sale_order_payment
-#: model:ir.model.fields,help:sale_order_payment.field_res_company__sale_order_payment_writeoff_max_amount
-#: model:ir.model.fields,help:sale_order_payment.field_res_config_settings__sale_order_payment_writeoff_max_amount
-msgid ""
-"Maximum difference, in the company currency, that can be written off "
-"automatically when reconciling the payments of a sale order with the invoice"
-" generated from this order. Above this amount, the reconciliation is left to"
-" the accountant."
 msgstr ""
 
 #. module: sale_order_payment
@@ -107,12 +68,6 @@ msgid "Payment Journal Items"
 msgstr ""
 
 #. module: sale_order_payment
-#. odoo-python
-#: code:addons/sale_order_payment/models/account_move.py:0
-msgid "Payment write-off on %(invoice)s (%(order)s)"
-msgstr ""
-
-#. module: sale_order_payment
 #: model:ir.model.fields,help:sale_order_payment.field_sale_order__amount_due
 msgid "Remaining amount to pay on this sale order."
 msgstr ""
@@ -123,28 +78,8 @@ msgid "Sale Order"
 msgstr ""
 
 #. module: sale_order_payment
-#: model:ir.model.fields,field_description:sale_order_payment.field_res_company__sale_order_payment_writeoff_account_id
-#: model:ir.model.fields,field_description:sale_order_payment.field_res_config_settings__sale_order_payment_writeoff_account_id
-msgid "Sale Order Payment Write-off Account"
-msgstr ""
-
-#. module: sale_order_payment
-#: model_terms:ir.ui.view,arch_db:sale_order_payment.res_config_settings_view_form_sale_order_payment
-msgid "Sale Order Payments"
-msgstr ""
-
-#. module: sale_order_payment
 #: model:ir.model,name:sale_order_payment.model_sale_order
 msgid "Sales Order"
-msgstr ""
-
-#. module: sale_order_payment
-#. odoo-python
-#: code:addons/sale_order_payment/models/account_move.py:0
-msgid ""
-"The payments registered on the sale order %(order)s couldn't be reconciled "
-"automatically with this invoice: the difference between the invoice and the "
-"payments is %(difference)s. Please reconcile this invoice manually."
 msgstr ""
 
 #. module: sale_order_payment
@@ -157,24 +92,4 @@ msgstr ""
 #. module: sale_order_payment
 #: model:ir.model.fields,help:sale_order_payment.field_sale_order__is_paid
 msgid "True when the paid amount covers the total amount of the sale order."
-msgstr ""
-
-#. module: sale_order_payment
-#: model_terms:ir.ui.view,arch_db:sale_order_payment.res_config_settings_view_form_sale_order_payment
-msgid ""
-"When the payments registered on a sale order don't match exactly the amount "
-"of the invoice generated from this order, the difference is written off on "
-"this account, as long as it doesn't exceed the maximum amount. Leave the "
-"account empty to always reconcile the invoices manually."
-msgstr ""
-
-#. module: sale_order_payment
-#: model_terms:ir.ui.view,arch_db:sale_order_payment.res_config_settings_view_form_sale_order_payment
-msgid "Write-off of the sale order payment differences"
-msgstr ""
-
-#. module: sale_order_payment
-#. odoo-python
-#: code:addons/sale_order_payment/models/account_move.py:0
-msgid "Write-off on %(order)s"
 msgstr ""

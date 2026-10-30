@@ -16,13 +16,6 @@ class TestSaleOrderPaymentLink(AccountTestInvoicingCommon):
     def setUpClass(cls):
         super().setUpClass()
         cls.company = cls.company_data["company"]
-        cls.writeoff_account = cls.company_data["default_account_expense"]
-        cls.company.write(
-            {
-                "sale_order_payment_writeoff_account_id": cls.writeoff_account.id,
-                "sale_order_payment_writeoff_max_amount": 0.05,
-            }
-        )
         # Keep the amounts of the tests free of taxes and invoiced on the
         # ordered quantities.
         cls.product_a.taxes_id = False
@@ -94,6 +87,16 @@ class TestSaleOrderPaymentLink(AccountTestInvoicingCommon):
         move.action_post()
         return move
 
+    def _ship_part_of_sale_order(self, order, quantity):
+        """Only a part of the sale order is shipped, so only this part of the
+        order can be invoiced.
+
+        The unit price is written again on purpose: changing the quantity
+        triggers its computation from the pricelist.
+        """
+        line = order.order_line
+        line.write({"product_uom_qty": quantity, "price_unit": line.price_unit})
+
     def _invoice_sale_order(self, order, price=None):
         """Generate the invoice of the sale order, optionally changing its
         amount to create a difference with the payments."""
@@ -102,11 +105,6 @@ class TestSaleOrderPaymentLink(AccountTestInvoicingCommon):
             invoice.invoice_line_ids.price_unit = price
         invoice.action_post()
         return invoice
-
-    def _get_writeoff_moves(self):
-        return self.env["account.move"].search(
-            [("move_type", "=", "entry"), ("ref", "like", "Payment write-off on")]
-        )
 
     def _create_currency(self, rate):
         """Create a testing currency, with the given rate against the company
@@ -162,110 +160,74 @@ class TestSaleOrderPaymentLink(AccountTestInvoicingCommon):
         self._register_payment(order)
         invoice = self._invoice_sale_order(order)
 
-        self.assertFalse(self._get_writeoff_moves())
         self.assertIsReconciledWithPayment(invoice, order)
 
-    def test_invoice_reconciled_with_writeoff(self):
-        """A small difference between the invoice and the payment is written
-        off so that the invoice is reconciled anyway."""
+    def test_partial_invoice_reconciled_with_payment(self):
+        """An invoice covering only a part of the sale order is partially
+        reconciled with the payment of the order."""
         order = self._create_sale_order()
         self._register_payment(order)
-        # The invoice is 1 cent below the payment.
-        invoice = self._invoice_sale_order(order, price=99.99)
+        # Only 60% of the order is shipped, so the invoice covers a part of it
+        # only.
+        self._ship_part_of_sale_order(order, 0.6)
+        invoice = self._invoice_sale_order(order)
+        self.assertEqual(invoice.amount_total, 60.0)
 
-        writeoff_moves = self._get_writeoff_moves()
-        self.assertEqual(len(writeoff_moves), 1)
-        self.assertIn(order.name, writeoff_moves.ref)
-        self.assertIn(invoice.name, writeoff_moves.ref)
-        self.assertEqual(writeoff_moves.state, "posted")
-        writeoff_lines = writeoff_moves.line_ids
-        self.assertEqual(len(writeoff_lines), 2)
-        # The customer paid 1 cent more than the invoice: the receivable is
-        # debited and the counterpart credited on the write-off account.
-        receivable_line = writeoff_lines.filtered(
-            lambda line: line.account_id
-            == self.company_data["default_account_receivable"]
-        )
-        self.assertEqual(receivable_line.debit, 0.01)
-        self.assertEqual(receivable_line.partner_id, self.partner_a)
-        counter_line = writeoff_lines - receivable_line
-        self.assertEqual(counter_line.account_id, self.writeoff_account)
-        self.assertEqual(counter_line.credit, 0.01)
+        self.assertEqual(invoice.payment_state, "paid")
+        self.assertEqual(invoice.amount_residual, 0.0)
+        payment_line = order.payment_line_ids
+        self.assertEqual(len(payment_line), 1)
+        # The payment is only partially used: its remaining amount stays
+        # available for the next invoice of the order.
+        self.assertFalse(payment_line.reconciled)
+        self.assertEqual(payment_line.amount_residual, -40.0)
 
-        self.assertIsReconciledWithPayment(invoice, order)
-        # The write-off entry must not be taken as a payment of the order.
-        self.assertEqual(order.paid_amount, order.amount_total)
-        self.assertTrue(order.is_paid)
+    def test_invoices_reconciled_with_payment(self):
+        """The payments of a sale order are reconciled with each invoice of the
+        order, the last one reconciling them completely."""
+        order = self._create_sale_order()
+        self._register_payment(order)
+        # First shipment: 60% of the order.
+        self._ship_part_of_sale_order(order, 0.6)
+        first_invoice = self._invoice_sale_order(order)
+        self.assertEqual(first_invoice.amount_total, 60.0)
+        payment_line = order.payment_line_ids
+        self.assertFalse(payment_line.reconciled)
 
-    def test_invoice_reconciled_with_writeoff_in_foreign_currency(self):
-        """The write-off is expressed in the currency of the invoice."""
+        # Second shipment: the rest of the order.
+        self._ship_part_of_sale_order(order, 1.0)
+        second_invoice = self._invoice_sale_order(order)
+        self.assertEqual(second_invoice.amount_total, 40.0)
+
+        self.assertIsReconciledWithPayment(first_invoice, order)
+        self.assertIsReconciledWithPayment(second_invoice, order)
+
+    def test_partial_invoice_reconciled_with_payment_in_foreign_currency(self):
+        """The reconciliation is partial as well when the invoice is expressed
+        in another currency than the company one."""
         currency = self._create_currency(0.9)
         order = self._create_sale_order(price=1000.0, currency=currency)
         self._register_payment(order)
-        # The invoice is 1 cent (in the invoice currency) below the payment.
-        invoice = self._invoice_sale_order(order, price=999.99)
+        self._ship_part_of_sale_order(order, 0.6)
+        invoice = self._invoice_sale_order(order)
         self.assertEqual(invoice.currency_id, currency)
+        self.assertEqual(invoice.amount_total, 600.0)
 
-        writeoff_moves = self._get_writeoff_moves()
-        self.assertEqual(len(writeoff_moves), 1)
-        counter_line = writeoff_moves.line_ids.filtered(
-            lambda line: line.account_id == self.writeoff_account
-        )
-        self.assertEqual(counter_line.currency_id, currency)
-        self.assertEqual(counter_line.amount_currency, -0.01)
-        self.assertEqual(counter_line.credit, 0.01)
+        self.assertEqual(invoice.payment_state, "paid")
+        payment_line = order.payment_line_ids
+        self.assertFalse(payment_line.reconciled)
+        self.assertEqual(payment_line.amount_residual_currency, -400.0)
 
-        self.assertIsReconciledWithPayment(invoice, order)
-
-    def test_invoice_reconciled_with_writeoff_rounded_in_company_currency(self):
-        """The difference is written off even when it doesn't represent any
-        amount in the company currency (low value coins)."""
-        currency = self._create_currency(200)
-        order = self._create_sale_order(price=1000.0, currency=currency)
-        self._register_payment(order)
-        invoice = self._invoice_sale_order(order, price=999.99)
-
-        writeoff_moves = self._get_writeoff_moves()
-        self.assertEqual(len(writeoff_moves), 1)
-        counter_line = writeoff_moves.line_ids.filtered(
-            lambda line: line.account_id == self.writeoff_account
-        )
-        self.assertEqual(counter_line.currency_id, currency)
-        self.assertEqual(counter_line.amount_currency, -0.01)
-        self.assertEqual(counter_line.credit, 0.0)
-
-        self.assertIsReconciledWithPayment(invoice, order)
-
-    def test_no_reconcile_when_difference_too_big(self):
-        """When the difference between the invoice and the payments is too big
-        to be written off, nothing is reconciled and a message is posted on the
-        invoice."""
+    def test_partial_payment_reconciled_with_invoice(self):
+        """The invoice is reconciled with the amount available on the payment
+        of the order, the difference being left open on the invoice."""
         order = self._create_sale_order()
         self._register_payment(order, amount=50.0)
         invoice = self._invoice_sale_order(order)
 
-        self.assertFalse(self._get_writeoff_moves())
-        self.assertEqual(invoice.payment_state, "not_paid")
-        self.assertEqual(invoice.amount_residual, 100.0)
-        self.assertFalse(order.payment_line_ids.reconciled)
-        self.assertTrue(
-            invoice.message_ids.filtered(
-                lambda message: "Please reconcile this invoice manually"
-                in (message.body or "")
-            ),
-            "A message should tell the difference couldn't be reconciled",
-        )
-
-    def test_no_writeoff_without_account(self):
-        """The write-off is disabled when no account is configured."""
-        self.company.sale_order_payment_writeoff_account_id = False
-        order = self._create_sale_order()
-        self._register_payment(order)
-        invoice = self._invoice_sale_order(order, price=99.99)
-
-        self.assertFalse(self._get_writeoff_moves())
-        self.assertEqual(invoice.payment_state, "not_paid")
-        self.assertFalse(order.payment_line_ids.reconciled)
+        self.assertEqual(invoice.payment_state, "partial")
+        self.assertEqual(invoice.amount_residual, 50.0)
+        self.assertTrue(order.payment_line_ids.reconciled)
 
     def test_no_reconcile_without_payment(self):
         """Nothing is done when the sale order has no payment."""
