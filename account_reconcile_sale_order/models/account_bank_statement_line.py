@@ -94,7 +94,7 @@ class AccountBankStatementLine(models.Model):
             "reference": f"reconcile_auxiliary;{reconcile_auxiliary_id}",
             "account_id": (account.id, self.env._("Sales Order %s", sale_order.name)),
             "partner_id": (
-                sale_order.partner_id.id,
+                sale_order.partner_id.commercial_partner_id.id,
                 sale_order.partner_id.display_name,
             ),
             "date": fields.Date.to_string(sale_order.date_order),
