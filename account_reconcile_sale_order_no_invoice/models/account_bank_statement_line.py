@@ -2,7 +2,6 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 
 from odoo import models
-from odoo.tools import format_amount
 
 
 class AccountBankStatementLine(models.Model):
@@ -16,46 +15,45 @@ class AccountBankStatementLine(models.Model):
     def _prepare_reconcile_line_data_sale_order_invoice(self, order):
         """In "payment" mode, don't create an invoice for the sale order."""
         if self._get_reconcile_sale_order_mode() == "payment":
-            self._schedule_sale_order_paid_activity(order)
+            self._send_sale_order_paid_mail(order)
             return self.env["account.move.line"]
         return super()._prepare_reconcile_line_data_sale_order_invoice(order)
 
-    def _schedule_sale_order_paid_activity(self, order):
-        """Create an activity on the sale order to record that it is paid."""
-        activity_type = self.env.ref(
-            "account_reconcile_sale_order_no_invoice.activity_type_sale_order_paid"
-        )
-        if order.activity_ids.filtered(
-            lambda activity: (
-                activity.activity_type_id == activity_type and activity.state != "done"
-            )
-        ):
-            return
-        amount = format_amount(self.env, order.amount_total, order.currency_id)
+    def _send_sale_order_paid_mail(self, order):
+        """Notify by email that the sale order is paid.
+
+        The email is sent when the sale order is marked as paid while
+        reconciling a bank statement line ("payment" mode): the salesperson
+        has to know that the order is paid to invoice it, the payment being
+        reconciled with the invoice later on.
+
+        The recipients are configured on the mail template, the email being
+        queued: it is sent by the 'Mail: Email Queue Manager' scheduled action.
+        The journal of the bank transaction can disable the notification, for
+        example when it is fed by an automated import which reconciles the
+        transactions automatically.
+        """
+        self.ensure_one()
+        if not self.journal_id.notify_sale_order_paid:
+            return False
+        if order.is_paid:
+            # The salesperson has already been notified: the order was paid by
+            # a previous reconciliation.
+            return False
+        # The payment reference of the statement line is "/" when the line has
+        # been created manually: use its label instead.
         reference = self.payment_ref
         if not reference or reference == "/":
             reference = self.name
-        order.activity_schedule(
-            "account_reconcile_sale_order_no_invoice.activity_type_sale_order_paid",
-            summary=self.env._(
-                "Sale order paid by bank reconciliation %(reference)s",
-                reference=reference,
-            ),
-            note=self.env._(
-                "<p>The sale order <b>%(order)s</b> has been marked as paid "
-                "during the bank reconciliation of the statement line <a "
-                "href='/web#model=account.bank.statement.line&amp;id=%(line_id)s'>"
-                "%(line_name)s</a> of %(date)s (amount %(amount)s).</p>"
-                "<p>The payment is still to be reconciled with the invoice "
-                "once the sale order is invoiced.</p>",
-                order=order.name,
-                line_id=self.id,
-                line_name=self.name,
-                date=self.date,
-                amount=amount,
-            ),
-            user_id=order.create_uid.id or self.env.uid,
-        )
+        # The statement line and its reference are given to the template to
+        # describe which bank transaction paid the sale order.
+        self.env.ref(
+            "account_reconcile_sale_order_no_invoice.sale_order_paid_mail_template"
+        ).with_context(
+            sale_order_paid_statement_line=self,
+            sale_order_paid_reference=reference,
+        ).send_mail(order.id)
+        return True
 
     def _reconcile_move_line_vals(self, line, move_id=False):
         vals = super()._reconcile_move_line_vals(line, move_id=move_id)

@@ -378,6 +378,15 @@ ul.auto-toc {
 <p>This module improves account_reconcile_sale_order to allow to add
 payments (account move line) on sale order from reconciliation interface
 instead of generating the invoice directly.</p>
+<p>When a sale order is marked as paid that way, an email is sent (using
+the mail template <em>Sale Order Paid: Notify the Salesperson</em>) so that the
+order can be invoiced, the payment being reconciled with the invoice
+later on. The recipients of the email are configured on the mail
+template (the salesperson of the order by default).</p>
+<p>The notification can be disabled on a journal with the option <em>Notify
+Paid Sale Orders</em>: it is meant for the journals fed by an automated
+import which reconciles the transactions automatically (for example a
+PayPal import).</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">

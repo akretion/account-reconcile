@@ -18,7 +18,8 @@
     ],
     "data": [
         "data/account_reconcile_model.xml",
-        "data/mail_activity_data.xml",
+        "data/sale_order_paid_mail_template.xml",
+        "views/account_journal_views.xml",
         "views/res_config_settings_views.xml",
     ],
     "demo": [],

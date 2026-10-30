@@ -6,6 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-30 14:48+0000\n"
+"PO-Revision-Date: 2026-10-30 14:48+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -14,14 +16,31 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: account_reconcile_sale_order_no_invoice
-#. odoo-python
-#: code:addons/account_reconcile_sale_order_no_invoice/models/account_bank_statement_line.py:0
+#: model:mail.template,body_html:account_reconcile_sale_order_no_invoice.sale_order_paid_mail_template
 msgid ""
-"<p>The sale order <b>%(order)s</b> has been marked as paid during the bank "
-"reconciliation of the statement line <a "
-"href='/web#model=account.bank.statement.line&amp;id=%(line_id)s'>%(line_name)s</a>"
-" of %(date)s (amount %(amount)s).</p><p>The payment is still to be "
-"reconciled with the invoice once the sale order is invoiced.</p>"
+"<div style=\"margin: 0px; padding: 0px\">\n"
+"                <p style=\"margin: 0px; padding: 0px; font-size: 13px\">\n"
+"                    Hello,\n"
+"                    <br/>\n"
+"                    <br/>\n"
+"                    The sale order <b t-out=\"object.name\"/> has been marked as\n"
+"                    paid during a bank reconciliation.\n"
+"                    <t t-set=\"statement_line\" t-value=\"ctx.get('sale_order_paid_statement_line')\"/>\n"
+"                    <t t-if=\"statement_line\">\n"
+"                        The payment has been registered from the bank\n"
+"                        transaction \"<t t-out=\"ctx.get('sale_order_paid_reference')\"/>\" of <t t-out=\"format_date(statement_line.date)\"/>\n"
+"                        (amount <t t-out=\"format_amount(statement_line.amount, statement_line.currency_id)\"/>).\n"
+"                    </t>\n"
+"                    <br/>\n"
+"                    <br/>\n"
+"                    The payment will be reconciled with the invoice once the\n"
+"                    sale order is invoiced.\n"
+"                    <br/>\n"
+"                    <br/>\n"
+"                    <a t-attf-href=\"{{object.get_base_url()}}/odoo/orders/{{object.id}}\" target=\"_blank\">Sale order</a>\n"
+"                </p>\n"
+"            </div>\n"
+"        "
 msgstr ""
 
 #. module: account_reconcile_sale_order_no_invoice
@@ -59,13 +78,39 @@ msgid "Config Settings"
 msgstr ""
 
 #. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model.fields,help:account_reconcile_sale_order_no_invoice.field_account_journal__notify_sale_order_paid
+msgid ""
+"If enabled, an e-mail is sent (with the mail template 'Sale Order Paid: "
+"Notify the Salesperson') when a sale order is marked as paid by the bank "
+"reconciliation of a transaction of this journal. Disable it for the journals"
+" fed by an automated import which reconciles the transactions automatically "
+"(for example a PayPal import)."
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
 #: model:ir.model.fields.selection,name:account_reconcile_sale_order_no_invoice.selection__res_company__account_reconcile_sale_order_mode__invoice
 msgid "Invoice the sale order at reconciliation"
 msgstr ""
 
 #. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model,name:account_reconcile_sale_order_no_invoice.model_account_journal
+msgid "Journal"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
 #: model:account.reconcile.model,name:account_reconcile_sale_order_no_invoice.account_reconcile_model_so_reference
 msgid "Match sale orders from reference"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model.fields,field_description:account_reconcile_sale_order_no_invoice.field_account_journal__notify_sale_order_paid
+msgid "Notify Paid Sale Orders"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model,name:account_reconcile_sale_order_no_invoice.model_account_reconcile_model
+msgid ""
+"Preset to create journal entries during a invoices and payments matching"
 msgstr ""
 
 #. module: account_reconcile_sale_order_no_invoice
@@ -81,18 +126,16 @@ msgid "Register the payment on the sale order"
 msgstr ""
 
 #. module: account_reconcile_sale_order_no_invoice
+#: model:mail.template,name:account_reconcile_sale_order_no_invoice.sale_order_paid_mail_template
+msgid "Sale Order Paid: Notify the Salesperson"
+msgstr ""
+
+#. module: account_reconcile_sale_order_no_invoice
 #: model_terms:ir.ui.view,arch_db:account_reconcile_sale_order_no_invoice.res_config_settings_view_form_sale_order_payment_reconcile
 msgid "Sale Orders"
 msgstr ""
 
 #. module: account_reconcile_sale_order_no_invoice
-#: model:mail.activity.type,name:account_reconcile_sale_order_no_invoice.activity_type_sale_order_paid
-#: model:mail.activity.type,summary:account_reconcile_sale_order_no_invoice.activity_type_sale_order_paid
-msgid "Sale order paid"
-msgstr ""
-
-#. module: account_reconcile_sale_order_no_invoice
-#. odoo-python
-#: code:addons/account_reconcile_sale_order_no_invoice/models/account_bank_statement_line.py:0
-msgid "Sale order paid by bank reconciliation %(reference)s"
+#: model:mail.template,subject:account_reconcile_sale_order_no_invoice.sale_order_paid_mail_template
+msgid "Sale order {{ object.name }} paid by bank reconciliation"
 msgstr ""

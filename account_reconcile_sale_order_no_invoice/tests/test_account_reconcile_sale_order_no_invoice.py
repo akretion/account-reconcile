@@ -1,7 +1,10 @@
 # Copyright 2026 Akretion (https://www.akretion.com)
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 
+from unittest.mock import patch
+
 from odoo.tests import tagged
+from odoo.tools import format_date
 
 from odoo.addons.account_reconcile_sale_order.tests.test_account_reconcile_sale_order import (  # noqa: E501
     TestAccountReconcileSaleOrder,
@@ -16,7 +19,23 @@ class TestSaleOrderPaymentReconcile(TestAccountReconcileSaleOrder):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        # the emails are not sent for real during the tests
+        mail_send_patch = patch.object(
+            type(cls.env["mail.mail"]), "send", lambda mail, **kwargs: True
+        )
+        mail_send_patch.start()
+        cls.addClassCleanup(mail_send_patch.stop)
         cls.company.account_reconcile_sale_order_mode = "payment"
+        # The salesperson of the order receives the email notifying that the
+        # order is paid: the users of the test database may have no email.
+        cls.salesperson = cls.env["res.users"].create(
+            {
+                "name": "Salesperson",
+                "login": "salesperson_sale_order_paid",
+                "email": "salesperson@example.com",
+            }
+        )
+        cls.sale_order.user_id = cls.salesperson
         # Make sure the order total only depends on the unit price set in the
         # parent setUpClass (4242), whatever taxes are configured on the demo
         # product, so the bank statement amount matches the order total.
@@ -69,30 +88,51 @@ class TestSaleOrderPaymentReconcile(TestAccountReconcileSaleOrder):
         self.assertTrue(order.is_paid)
         self.assertEqual(order.amount_due, 0.0)
         self.assertEqual(order.payment_line_count, 1)
-        # ... and an activity records on the order that it is paid.
-        activity_type = self.env.ref(
-            "account_reconcile_sale_order_no_invoice.activity_type_sale_order_paid"
+        # ... and the salesperson is notified by email that the order is paid.
+        mail = self.env["mail.mail"].search(
+            [
+                ("model", "=", "sale.order"),
+                ("res_id", "=", order.id),
+            ]
         )
-        paid_activities = order.activity_ids.filtered(
-            lambda activity: activity.activity_type_id == activity_type
+        self.assertEqual(len(mail), 1, "One email should be sent to the salesperson")
+        # the recipient is set on the mail template (the salesperson by default)
+        self.assertIn(order.user_id.email, mail.email_to)
+        self.assertIn(order.name, mail.subject)
+        self.assertIn(order.name, mail.body_html)
+        # the statement line which registered the payment is described in the
+        # email (with the date of the bank transaction)
+        self.assertIn(
+            format_date(self.env, self.bank_statement.line_ids.date), mail.body_html
         )
-        self.assertEqual(
-            len(paid_activities), 1, "One paid activity should be scheduled"
-        )
-        self.assertNotEqual(paid_activities.state, "done")
 
-    def test_no_duplicate_paid_activity(self):
-        """Test that scheduling the paid activity twice doesn't duplicate it"""
+    def test_no_duplicate_paid_mail(self):
+        """Test that the salesperson is not notified again when the order is
+        already paid"""
         self._reconcile_sale_order(manual=True)
-        # Simulate a second payment registration on the same order.
-        self.bank_statement.line_ids._schedule_sale_order_paid_activity(self.sale_order)
-        activity_type = self.env.ref(
-            "account_reconcile_sale_order_no_invoice.activity_type_sale_order_paid"
+        order = self.sale_order
+        mails = self.env["mail.mail"].search(
+            [("model", "=", "sale.order"), ("res_id", "=", order.id)]
         )
-        paid_activities = self.sale_order.activity_ids.filtered(
-            lambda activity: activity.activity_type_id == activity_type
+        self.assertEqual(len(mails), 1)
+        # a second registration of the payment doesn't send another email
+        self.assertFalse(self.bank_statement.line_ids._send_sale_order_paid_mail(order))
+        mails = self.env["mail.mail"].search(
+            [("model", "=", "sale.order"), ("res_id", "=", order.id)]
         )
-        self.assertEqual(len(paid_activities), 1)
+        self.assertEqual(len(mails), 1)
+
+    def test_no_mail_when_the_journal_disables_the_notification(self):
+        """The notification is skipped when the journal is configured so, for
+        example for an automated import which reconciles the transactions."""
+        self.bank_statement.journal_id.notify_sale_order_paid = False
+        self._reconcile_sale_order()
+        order = self.sale_order
+        self.assertTrue(order.is_paid)
+        mails = self.env["mail.mail"].search(
+            [("model", "=", "sale.order"), ("res_id", "=", order.id)]
+        )
+        self.assertFalse(mails)
 
     def test_rule_reconcile_payment_mode(self):
         """Test that the sale order matching rule registers the payment and

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Akretion (https://www.akretion.com)
+     License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html). -->
+<odoo>
+    <!-- E-mail sent when a sale order is marked as paid while reconciling a
+         bank statement line in "payment" mode (see
+         AccountBankStatementLine._send_sale_order_paid_mail).
+
+         Set here the recipients (E-mail To or Partner To) of the notification:
+         it defaults to the salesperson of the sale order. The e-mail is
+         queued, it is sent by the 'Mail: Email Queue Manager' scheduled
+         action. The notification can be disabled by journal (field 'Notify
+         Paid Sale Orders'). -->
+    <record id="sale_order_paid_mail_template" model="mail.template">
+        <field name="name">Sale Order Paid: Notify the Salesperson</field>
+        <field name="model_id" ref="sale.model_sale_order" />
+        <field
+            name="subject"
+        >Sale order {{ object.name }} paid by bank reconciliation</field>
+        <field
+            name="email_from"
+        >{{ (user.email_formatted or object.company_id.email_formatted) }}</field>
+        <field name="email_to">{{ object.user_id.email_formatted }}</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px">
+                <p style="margin: 0px; padding: 0px; font-size: 13px">
+                    Hello,
+                    <br />
+                    <br />
+                    The sale order <b t-out="object.name" /> has been marked as
+                    paid during a bank reconciliation.
+                    <t
+                    t-set="statement_line"
+                    t-value="ctx.get('sale_order_paid_statement_line')"
+                />
+                    <t t-if="statement_line">
+                        The payment has been registered from the bank
+                        transaction "<t
+                    t-out="ctx.get('sale_order_paid_reference')"
+                />" of <t t-out="format_date(statement_line.date)" />
+                        (amount <t
+                    t-out="format_amount(statement_line.amount, statement_line.currency_id)"
+                />).
+                    </t>
+                    <br />
+                    <br />
+                    The payment will be reconciled with the invoice once the
+                    sale order is invoiced.
+                    <br />
+                    <br />
+                    <a
+                    t-attf-href="{{object.get_base_url()}}/odoo/orders/{{object.id}}"
+                    target="_blank"
+                >Sale order</a>
+                </p>
+            </div>
+        </field>
+    </record>
+</odoo>

@@ -15,10 +15,55 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
 
 #. module: account_reconcile_sale_order_no_invoice
-#. odoo-python
-#: code:addons/account_reconcile_sale_order_no_invoice/models/account_bank_statement_line.py:0
-msgid "<p>The sale order <b>%(order)s</b> has been marked as paid during the bank reconciliation of the statement line <a href='/web#model=account.bank.statement.line&amp;id=%(line_id)s'>%(line_name)s</a> of %(date)s (amount %(amount)s).</p><p>The payment is still to be reconciled with the invoice once the sale order is invoiced.</p>"
-msgstr "<p>La commande <b>%(order)s</b> a été marquée comme payée lors du rapprochement bancaire de la ligne <a href='/web#model=account.bank.statement.line&amp;id=%(line_id)s'>%(line_name)s</a> du %(date)s (montant %(amount)s).</p><p>Le paiement restera à rapprocher de la facture lorsque la commande sera facturée.</p>"
+#: model:mail.template,body_html:account_reconcile_sale_order_no_invoice.sale_order_paid_mail_template
+msgid ""
+"<div style=\"margin: 0px; padding: 0px\">\n"
+"                <p style=\"margin: 0px; padding: 0px; font-size: 13px\">\n"
+"                    Hello,\n"
+"                    <br/>\n"
+"                    <br/>\n"
+"                    The sale order <b t-out=\"object.name\"/> has been marked as\n"
+"                    paid during a bank reconciliation.\n"
+"                    <t t-set=\"statement_line\" t-value=\"ctx.get('sale_order_paid_statement_line')\"/>\n"
+"                    <t t-if=\"statement_line\">\n"
+"                        The payment has been registered from the bank\n"
+"                        transaction \"<t t-out=\"ctx.get('sale_order_paid_reference')\"/>\" of <t t-out=\"format_date(statement_line.date)\"/>\n"
+"                        (amount <t t-out=\"format_amount(statement_line.amount, statement_line.currency_id)\"/>).\n"
+"                    </t>\n"
+"                    <br/>\n"
+"                    <br/>\n"
+"                    The payment will be reconciled with the invoice once the\n"
+"                    sale order is invoiced.\n"
+"                    <br/>\n"
+"                    <br/>\n"
+"                    <a t-attf-href=\"{{object.get_base_url()}}/odoo/orders/{{object.id}}\" target=\"_blank\">Sale order</a>\n"
+"                </p>\n"
+"            </div>\n"
+"        "
+msgstr ""
+"<div style=\"margin: 0px; padding: 0px\">\n"
+"                <p style=\"margin: 0px; padding: 0px; font-size: 13px\">\n"
+"                    Bonjour,\n"
+"                    <br/>\n"
+"                    <br/>\n"
+"                    La commande <b t-out=\"object.name\"/> a été marquée comme\n"
+"                    payée lors d'un rapprochement bancaire.\n"
+"                    <t t-set=\"statement_line\" t-value=\"ctx.get('sale_order_paid_statement_line')\"/>\n"
+"                    <t t-if=\"statement_line\">\n"
+"                        Le paiement a été enregistré à partir de la\n"
+"                        transaction bancaire « <t t-out=\"ctx.get('sale_order_paid_reference')\"/> » du <t t-out=\"format_date(statement_line.date)\"/>\n"
+"                        (montant <t t-out=\"format_amount(statement_line.amount, statement_line.currency_id)\"/>).\n"
+"                    </t>\n"
+"                    <br/>\n"
+"                    <br/>\n"
+"                    Le paiement sera rapproché de la facture lorsque la\n"
+"                    commande sera facturée.\n"
+"                    <br/>\n"
+"                    <br/>\n"
+"                    <a t-attf-href=\"{{object.get_base_url()}}/odoo/orders/{{object.id}}\" target=\"_blank\">Commande</a>\n"
+"                </p>\n"
+"            </div>\n"
+"        \n"
 
 #. module: account_reconcile_sale_order_no_invoice
 #: model:ir.model,name:account_reconcile_sale_order_no_invoice.model_account_bank_statement_line
@@ -33,8 +78,14 @@ msgstr "Comportement lorsqu'une ligne de relevé bancaire est rapprochée d'une 
 #. module: account_reconcile_sale_order_no_invoice
 #: model:ir.model.fields,help:account_reconcile_sale_order_no_invoice.field_res_company__account_reconcile_sale_order_mode
 #: model:ir.model.fields,help:account_reconcile_sale_order_no_invoice.field_res_config_settings__account_reconcile_sale_order_mode
-msgid "Behaviour when a bank statement line is reconciled against a sale order (selected manually in the \"Sales orders\" tab or matched automatically by a sale_order_matching rule).\n- Register the payment on the sale order: no invoice is created, a receivable counterpart journal item labelled with the sale order name is created and linked to the order, which is marked as paid.\n- Invoice the sale order at reconciliation: the sale order is invoiced and the created invoice is reconciled with the payment (OCA account_reconcile_sale_order behaviour)."
-msgstr "Comportement lorsqu'une ligne de relevé bancaire est rapprochée d'une commande client (sélection manuelle dans l'onglet « Commandes clients » ou détection automatique par une règle sale_order_matching).\n- Enregistrer le paiement sur la commande client : aucune facture n'est créée, une écriture de contrepartie au compte client, libellée avec le nom de la commande, est créée et liée à la commande, qui est marquée comme payée.\n- Facturer la commande client au rapprochement : la commande est facturée et la facture créée est rapprochée du paiement (comportement du module OCA account_reconcile_sale_order)."
+msgid ""
+"Behaviour when a bank statement line is reconciled against a sale order (selected manually in the \"Sales orders\" tab or matched automatically by a sale_order_matching rule).\n"
+"- Register the payment on the sale order: no invoice is created, a receivable counterpart journal item labelled with the sale order name is created and linked to the order, which is marked as paid.\n"
+"- Invoice the sale order at reconciliation: the sale order is invoiced and the created invoice is reconciled with the payment (OCA account_reconcile_sale_order behaviour)."
+msgstr ""
+"Comportement lorsqu'une ligne de relevé bancaire est rapprochée d'une commande client (sélection manuelle dans l'onglet « Commandes clients » ou détection automatique par une règle sale_order_matching).\n"
+"- Enregistrer le paiement sur la commande client : aucune facture n'est créée, une écriture de contrepartie au compte client, libellée avec le nom de la commande, est créée et liée à la commande, qui est marquée comme payée.\n"
+"- Facturer la commande client au rapprochement : la commande est facturée et la facture créée est rapprochée du paiement (comportement du module OCA account_reconcile_sale_order)."
 
 #. module: account_reconcile_sale_order_no_invoice
 #: model:ir.model,name:account_reconcile_sale_order_no_invoice.model_res_company
@@ -47,14 +98,34 @@ msgid "Config Settings"
 msgstr "Paramètres de configuration"
 
 #. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model.fields,help:account_reconcile_sale_order_no_invoice.field_account_journal__notify_sale_order_paid
+msgid "If enabled, an e-mail is sent (with the mail template 'Sale Order Paid: Notify the Salesperson') when a sale order is marked as paid by the bank reconciliation of a transaction of this journal. Disable it for the journals fed by an automated import which reconciles the transactions automatically (for example a PayPal import)."
+msgstr "Si activé, un e-mail est envoyé (avec le modèle d'e-mail « Commande client payée : notifier le commercial ») lorsqu'une commande client est marquée comme payée par le rapprochement bancaire d'une transaction de ce journal. Désactivez-le pour les journaux alimentés par un import automatisé qui rapproche les transactions automatiquement (par exemple un import PayPal)."
+
+#. module: account_reconcile_sale_order_no_invoice
 #: model:ir.model.fields.selection,name:account_reconcile_sale_order_no_invoice.selection__res_company__account_reconcile_sale_order_mode__invoice
 msgid "Invoice the sale order at reconciliation"
 msgstr "Facturer la commande client au rapprochement"
 
 #. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model,name:account_reconcile_sale_order_no_invoice.model_account_journal
+msgid "Journal"
+msgstr "Journal"
+
+#. module: account_reconcile_sale_order_no_invoice
 #: model:account.reconcile.model,name:account_reconcile_sale_order_no_invoice.account_reconcile_model_so_reference
 msgid "Match sale orders from reference"
 msgstr "Détecter les commandes clients depuis la référence"
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model.fields,field_description:account_reconcile_sale_order_no_invoice.field_account_journal__notify_sale_order_paid
+msgid "Notify Paid Sale Orders"
+msgstr "Notifier les commandes clients payées"
+
+#. module: account_reconcile_sale_order_no_invoice
+#: model:ir.model,name:account_reconcile_sale_order_no_invoice.model_account_reconcile_model
+msgid "Preset to create journal entries during a invoices and payments matching"
+msgstr "Préconfigurer pour créer une pièce pendant le rapprochement entre des factures et des paiements"
 
 #. module: account_reconcile_sale_order_no_invoice
 #: model:ir.model.fields,field_description:account_reconcile_sale_order_no_invoice.field_res_company__account_reconcile_sale_order_mode
@@ -69,19 +140,16 @@ msgid "Register the payment on the sale order"
 msgstr "Enregistrer le paiement sur la commande client"
 
 #. module: account_reconcile_sale_order_no_invoice
+#: model:mail.template,name:account_reconcile_sale_order_no_invoice.sale_order_paid_mail_template
+msgid "Sale Order Paid: Notify the Salesperson"
+msgstr "Commande client payée : notifier le commercial"
+
+#. module: account_reconcile_sale_order_no_invoice
 #: model_terms:ir.ui.view,arch_db:account_reconcile_sale_order_no_invoice.res_config_settings_view_form_sale_order_payment_reconcile
 msgid "Sale Orders"
 msgstr "Commandes clients"
 
 #. module: account_reconcile_sale_order_no_invoice
-#: model:mail.activity.type,name:account_reconcile_sale_order_no_invoice.activity_type_sale_order_paid
-#: model:mail.activity.type,summary:account_reconcile_sale_order_no_invoice.activity_type_sale_order_paid
-msgid "Sale order paid"
-msgstr "Commande payée"
-
-#. module: account_reconcile_sale_order_no_invoice
-#. odoo-python
-#: code:addons/account_reconcile_sale_order_no_invoice/models/account_bank_statement_line.py:0
-msgid "Sale order paid by bank reconciliation %(reference)s"
-msgstr "Commande payée par rapprochement bancaire %(reference)s"
-
+#: model:mail.template,subject:account_reconcile_sale_order_no_invoice.sale_order_paid_mail_template
+msgid "Sale order {{ object.name }} paid by bank reconciliation"
+msgstr "Commande {{ object.name }} payée par rapprochement bancaire"
