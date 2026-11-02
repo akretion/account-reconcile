@@ -69,6 +69,35 @@ class SaleOrder(models.Model):
                     order.amount_total - paid_amount
                 )
 
+    def _payment_matches_invoiced_amount(self):
+        """Return True when the posted payments of the order match the amount
+        invoiced for this order.
+
+        Both amounts are compared in the company currency: the invoices are
+        taken with their signed total and the payment journal items with their
+        balance.
+        """
+        self.ensure_one()
+        invoiced_amount = sum(
+            self.invoice_ids.filtered(lambda move: move.state == "posted").mapped(
+                "amount_total_signed"
+            )
+        )
+        payment_lines = self.payment_line_ids.filtered(
+            lambda line: line.parent_state == "posted"
+        )
+        paid_amount = sum(payment_lines.mapped("credit")) - sum(
+            payment_lines.mapped("debit")
+        )
+        return (
+            float_compare(
+                paid_amount,
+                invoiced_amount,
+                precision_rounding=self.company_id.currency_id.rounding,
+            )
+            == 0
+        )
+
     def action_view_payment_lines(self):
         self.ensure_one()
         action = self.env["ir.actions.act_window"]._for_xml_id(

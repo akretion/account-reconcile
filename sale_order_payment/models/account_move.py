@@ -35,6 +35,11 @@ class AccountMove(models.Model):
         remaining amount of the payment stays available to be reconciled with
         the next invoice of the order.
 
+        When the sale order is fully invoiced, the reconciliation must be
+        total: if the payment doesn't match the invoiced amount, nothing is
+        reconciled. Such a difference is an inconsistency (a wrong amount on
+        the payment for example) which must be fixed manually.
+
         :return: True when a reconciliation has been made
         """
         self.ensure_one()
@@ -48,6 +53,11 @@ class AccountMove(models.Model):
             and line.account_id in receivable_lines.account_id
         )
         if not receivable_lines or not payment_lines:
+            return False
+        if (
+            order.invoice_status == "invoiced"
+            and not order._payment_matches_invoiced_amount()
+        ):
             return False
         (receivable_lines + payment_lines).reconcile()
         return True

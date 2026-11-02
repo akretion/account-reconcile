@@ -87,20 +87,17 @@ class TestSaleOrderPaymentLink(AccountTestInvoicingCommon):
         move.action_post()
         return move
 
-    def _ship_part_of_sale_order(self, order, quantity):
-        """Only a part of the sale order is shipped, so only this part of the
-        order can be invoiced.
+    def _invoice_sale_order(self, order, price=None, quantity=None):
+        """Generate the invoice of the sale order.
 
-        The unit price is written again on purpose: changing the quantity
-        triggers its computation from the pricelist.
+        :param price: amount to write on the invoice line, to create a
+            difference with the payments
+        :param quantity: quantity to invoice, to invoice only a part of the
+            sale order (the rest of the order stays to invoice)
         """
-        line = order.order_line
-        line.write({"product_uom_qty": quantity, "price_unit": line.price_unit})
-
-    def _invoice_sale_order(self, order, price=None):
-        """Generate the invoice of the sale order, optionally changing its
-        amount to create a difference with the payments."""
         invoice = order._create_invoices()
+        if quantity is not None:
+            invoice.invoice_line_ids.quantity = quantity
         if price is not None:
             invoice.invoice_line_ids.price_unit = price
         invoice.action_post()
@@ -167,10 +164,10 @@ class TestSaleOrderPaymentLink(AccountTestInvoicingCommon):
         reconciled with the payment of the order."""
         order = self._create_sale_order()
         self._register_payment(order)
-        # Only 60% of the order is shipped, so the invoice covers a part of it
-        # only.
-        self._ship_part_of_sale_order(order, 0.6)
-        invoice = self._invoice_sale_order(order)
+        # Only 60% of the order is invoiced: the rest of the order stays to
+        # invoice.
+        invoice = self._invoice_sale_order(order, quantity=0.6)
+        self.assertEqual(order.invoice_status, "to invoice")
         self.assertEqual(invoice.amount_total, 60.0)
 
         self.assertEqual(invoice.payment_state, "paid")
@@ -187,16 +184,16 @@ class TestSaleOrderPaymentLink(AccountTestInvoicingCommon):
         order, the last one reconciling them completely."""
         order = self._create_sale_order()
         self._register_payment(order)
-        # First shipment: 60% of the order.
-        self._ship_part_of_sale_order(order, 0.6)
-        first_invoice = self._invoice_sale_order(order)
+        # First invoice: 60% of the order.
+        first_invoice = self._invoice_sale_order(order, quantity=0.6)
+        self.assertEqual(order.invoice_status, "to invoice")
         self.assertEqual(first_invoice.amount_total, 60.0)
         payment_line = order.payment_line_ids
         self.assertFalse(payment_line.reconciled)
 
-        # Second shipment: the rest of the order.
-        self._ship_part_of_sale_order(order, 1.0)
+        # Second invoice: the rest of the order.
         second_invoice = self._invoice_sale_order(order)
+        self.assertEqual(order.invoice_status, "invoiced")
         self.assertEqual(second_invoice.amount_total, 40.0)
 
         self.assertIsReconciledWithPayment(first_invoice, order)
@@ -208,8 +205,7 @@ class TestSaleOrderPaymentLink(AccountTestInvoicingCommon):
         currency = self._create_currency(0.9)
         order = self._create_sale_order(price=1000.0, currency=currency)
         self._register_payment(order)
-        self._ship_part_of_sale_order(order, 0.6)
-        invoice = self._invoice_sale_order(order)
+        invoice = self._invoice_sale_order(order, quantity=0.6)
         self.assertEqual(invoice.currency_id, currency)
         self.assertEqual(invoice.amount_total, 600.0)
 
@@ -218,15 +214,46 @@ class TestSaleOrderPaymentLink(AccountTestInvoicingCommon):
         self.assertFalse(payment_line.reconciled)
         self.assertEqual(payment_line.amount_residual_currency, -400.0)
 
-    def test_partial_payment_reconciled_with_invoice(self):
-        """The invoice is reconciled with the amount available on the payment
-        of the order, the difference being left open on the invoice."""
+    def test_partial_payment_not_reconciled_when_order_fully_invoiced(self):
+        """A payment which doesn't match the invoiced amount is not reconciled
+        when the whole order is invoiced: the difference must be fixed
+        manually."""
         order = self._create_sale_order()
         self._register_payment(order, amount=50.0)
         invoice = self._invoice_sale_order(order)
+        self.assertEqual(order.invoice_status, "invoiced")
+
+        self.assertEqual(invoice.payment_state, "not_paid")
+        self.assertEqual(invoice.amount_residual, 100.0)
+        self.assertFalse(order.payment_line_ids.reconciled)
+        receivable_lines = invoice.line_ids.filtered(
+            lambda line: line.account_id.account_type == "asset_receivable"
+        )
+        self.assertFalse(receivable_lines.reconciled)
+
+    def test_payment_above_invoiced_amount_not_reconciled(self):
+        """A payment which exceeds the invoiced amount is not reconciled either
+        once the whole order is invoiced."""
+        order = self._create_sale_order()
+        self._register_payment(order, amount=110.0)
+        invoice = self._invoice_sale_order(order)
+        self.assertEqual(order.invoice_status, "invoiced")
+
+        self.assertEqual(invoice.payment_state, "not_paid")
+        self.assertEqual(invoice.amount_residual, 100.0)
+        self.assertFalse(order.payment_line_ids.reconciled)
+
+    def test_partial_payment_reconciled_when_order_partially_invoiced(self):
+        """A partial reconciliation is allowed when only a part of the order is
+        invoiced: the order still has invoices to come."""
+        order = self._create_sale_order()
+        self._register_payment(order, amount=50.0)
+        invoice = self._invoice_sale_order(order, quantity=0.6)
+        self.assertEqual(order.invoice_status, "to invoice")
+        self.assertEqual(invoice.amount_total, 60.0)
 
         self.assertEqual(invoice.payment_state, "partial")
-        self.assertEqual(invoice.amount_residual, 50.0)
+        self.assertEqual(invoice.amount_residual, 10.0)
         self.assertTrue(order.payment_line_ids.reconciled)
 
     def test_no_reconcile_without_payment(self):
