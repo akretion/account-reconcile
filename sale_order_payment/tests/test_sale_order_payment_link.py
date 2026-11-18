@@ -150,6 +150,47 @@ class TestSaleOrderPaymentLink(AccountTestInvoicingCommon):
         self.assertEqual(order.amount_due, 0.0)
         self.assertTrue(order.is_paid)
 
+    def test_is_paid_is_stored_and_can_be_searched(self):
+        """The 'Paid' flag is stored, so the paid orders can be filtered."""
+        order = self._create_sale_order()
+        SaleOrder = self.env["sale.order"]
+        self.assertFalse(order.is_paid)
+        self.assertNotIn(order, SaleOrder.search([("is_paid", "=", True)]))
+
+        self._register_payment(order)
+
+        self.assertTrue(order.is_paid)
+        self.assertIn(order, SaleOrder.search([("is_paid", "=", True)]))
+
+    def test_paid_amount_is_tracked_in_the_chatter(self):
+        """A change of the paid amount is logged on the sale order."""
+        # the test environment disables the messages and the tracking: restore
+        # them to check what is logged on the order
+        self.env = self.env(
+            context=dict(
+                self.env.context,
+                tracking_disable=False,
+                mail_notrack=False,
+                mail_create_nolog=False,
+            )
+        )
+        order = self._create_sale_order()
+        # the creation of the record discards the tracking of the transaction:
+        # run the precommit hooks to start from a clean state, like an order
+        # created in a previous transaction
+        self.env.cr.precommit.run()
+
+        self._register_payment(order)
+        # the tracking values are generated when the transaction is flushed
+        self.env.flush_all()
+        self.env.cr.precommit.run()
+
+        tracked = order.message_ids.tracking_value_ids.filtered(
+            lambda value: value.field_id.name == "paid_amount"
+        )
+        self.assertTrue(tracked)
+        self.assertIn(order.amount_total, tracked.mapped("new_value_float"))
+
     def test_invoice_reconciled_with_payment(self):
         """The invoice generated from a paid sale order is reconciled with the
         payment."""

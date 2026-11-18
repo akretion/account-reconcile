@@ -6,6 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-18 16:24+0000\n"
+"PO-Revision-Date: 2026-11-18 16:24+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -14,8 +16,20 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: sale_order_payment
+#: model:ir.model.fields,help:sale_order_payment.field_account_bank_statement_line__journal_type
+#: model:ir.model.fields,help:sale_order_payment.field_account_move__journal_type
+msgid ""
+"\n"
+"        Select 'Sale' for customer invoices journals.\n"
+"        Select 'Purchase' for vendor bills journals.\n"
+"        Select 'Cash', 'Bank' or 'Credit Card' for journals that are used in customer or vendor payments.\n"
+"        Select 'General' for miscellaneous operations journals.\n"
+"        "
+msgstr ""
+
+#. module: sale_order_payment
 #: model_terms:ir.ui.view,arch_db:sale_order_payment.view_order_form_sale_order_payment
-msgid "<span class=\"o_form_label text-danger\">To pay</span>"
+msgid "<span class=\"o_form_label text-danger\">Paid</span>"
 msgstr ""
 
 #. module: sale_order_payment
@@ -48,6 +62,7 @@ msgstr ""
 
 #. module: sale_order_payment
 #: model:ir.model.fields,field_description:sale_order_payment.field_sale_order__is_paid
+#: model_terms:ir.ui.view,arch_db:sale_order_payment.view_sales_order_filter_sale_order_payment
 msgid "Paid"
 msgstr ""
 
@@ -92,4 +107,10 @@ msgstr ""
 #. module: sale_order_payment
 #: model:ir.model.fields,help:sale_order_payment.field_sale_order__is_paid
 msgid "True when the paid amount covers the total amount of the sale order."
+msgstr ""
+
+#. module: sale_order_payment
+#: model:ir.model.fields,field_description:sale_order_payment.field_account_bank_statement_line__journal_type
+#: model:ir.model.fields,field_description:sale_order_payment.field_account_move__journal_type
+msgid "Type"
 msgstr ""

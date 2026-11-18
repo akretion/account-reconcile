@@ -19,21 +19,26 @@ class SaleOrder(models.Model):
     payment_line_count = fields.Integer(
         string="Payment Entries",
         compute="_compute_payment_info",
+        store=True,
     )
     paid_amount = fields.Monetary(
         compute="_compute_payment_info",
         currency_field="currency_id",
+        store=True,
+        tracking=True,
         help="Total amount of the payment journal items linked to this sale "
         "order (posted or draft entries, cancelled entries excluded).",
     )
     amount_due = fields.Monetary(
         compute="_compute_payment_info",
         currency_field="currency_id",
+        store=True,
         help="Remaining amount to pay on this sale order.",
     )
     is_paid = fields.Boolean(
         string="Paid",
         compute="_compute_payment_info",
+        store=True,
         help="True when the paid amount covers the total amount of the sale order.",
     )
 

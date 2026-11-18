@@ -16,11 +16,6 @@ msgstr ""
 
 #. module: sale_order_payment
 #: model_terms:ir.ui.view,arch_db:sale_order_payment.view_order_form_sale_order_payment
-msgid "<span class=\"o_form_label text-danger\">To pay</span>"
-msgstr "<span class=\"o_form_label text-danger\">À payer</span>"
-
-#. module: sale_order_payment
-#: model_terms:ir.ui.view,arch_db:sale_order_payment.view_order_form_sale_order_payment
 msgid "<span class=\"o_form_label text-success\">Paid</span>"
 msgstr "<span class=\"o_form_label text-success\">Payé</span>"
 
@@ -89,3 +84,32 @@ msgstr "Montant total des écritures de règlement liées à cette commande clie
 #: model:ir.model.fields,help:sale_order_payment.field_sale_order__is_paid
 msgid "True when the paid amount covers the total amount of the sale order."
 msgstr "Vrai lorsque le montant payé couvre le montant total de la commande client."
+
+#. module: sale_order_payment
+#: model_terms:ir.ui.view,arch_db:sale_order_payment.view_order_form_sale_order_payment
+msgid "<span class=\"o_form_label text-danger\">Paid</span>"
+msgstr "<span class=\"o_form_label text-danger\">Payé</span>"
+
+#. module: sale_order_payment
+#: model:ir.model.fields,field_description:sale_order_payment.field_account_bank_statement_line__journal_type
+#: model:ir.model.fields,field_description:sale_order_payment.field_account_move__journal_type
+msgid "Type"
+msgstr "Type"
+
+#. module: sale_order_payment
+#: model:ir.model.fields,help:sale_order_payment.field_account_bank_statement_line__journal_type
+#: model:ir.model.fields,help:sale_order_payment.field_account_move__journal_type
+msgid ""
+"\n"
+"        Select 'Sale' for customer invoices journals.\n"
+"        Select 'Purchase' for vendor bills journals.\n"
+"        Select 'Cash', 'Bank' or 'Credit Card' for journals that are used in customer or vendor payments.\n"
+"        Select 'General' for miscellaneous operations journals.\n"
+"        "
+msgstr ""
+"\n"
+"        Sélectionnez 'Vente' pour les journaux des factures clients.\n"
+"        Sélectionnez 'Achat' pour les journaux des factures fournisseurs.\n"
+"        Sélectionnez 'Espèces', 'Banque' ou 'Carte de crédit' pour les journaux utilisés dans les paiements clients ou fournisseurs.\n"
+"        Sélectionnez 'Divers' pour les journaux d'opérations diverses.\n"
+"        "
