@@ -87,6 +87,47 @@ class TestSaleOrderPaymentLink(AccountTestInvoicingCommon):
         move.action_post()
         return move
 
+    def _register_refund(self, order, amount=None):
+        """Register a refund on the sale order: a debit on the receivable."""
+        amount = order.amount_total if amount is None else amount
+        currency = order.currency_id
+        balance = currency._convert(
+            amount, self.company.currency_id, self.company, order.date_order
+        )
+        journal = self.company_data["default_journal_bank"]
+        move = self.env["account.move"].create(
+            {
+                "move_type": "entry",
+                "journal_id": journal.id,
+                "date": order.date_order,
+                "line_ids": [
+                    Command.create(
+                        {
+                            "name": order.name,
+                            "account_id": self.company_data[
+                                "default_account_receivable"
+                            ].id,
+                            "partner_id": order.partner_id.id,
+                            "currency_id": currency.id,
+                            "amount_currency": amount,
+                            "balance": balance,
+                            "sale_order_id": order.id,
+                        }
+                    ),
+                    Command.create(
+                        {
+                            "name": order.name,
+                            "account_id": journal.default_account_id.id,
+                            "partner_id": order.partner_id.id,
+                            "credit": balance,
+                        }
+                    ),
+                ],
+            }
+        )
+        move.action_post()
+        return move
+
     def _invoice_sale_order(self, order, price=None, quantity=None):
         """Generate the invoice of the sale order.
 
@@ -149,6 +190,82 @@ class TestSaleOrderPaymentLink(AccountTestInvoicingCommon):
         self.assertEqual(order.paid_amount, order.amount_total)
         self.assertEqual(order.amount_due, 0.0)
         self.assertTrue(order.is_paid)
+
+    def test_is_paid_is_stored_and_can_be_searched(self):
+        """The 'Paid' flag is stored, so the paid orders can be filtered."""
+        order = self._create_sale_order()
+        SaleOrder = self.env["sale.order"]
+        self.assertFalse(order.is_paid)
+        self.assertNotIn(order, SaleOrder.search([("is_paid", "=", True)]))
+
+        self._register_payment(order)
+
+        self.assertTrue(order.is_paid)
+        self.assertIn(order, SaleOrder.search([("is_paid", "=", True)]))
+
+    def test_paid_amount_is_tracked_in_the_chatter(self):
+        """A change of the paid amount is logged on the sale order."""
+        # the test environment disables the messages and the tracking: restore
+        # them to check what is logged on the order
+        self.env = self.env(
+            context=dict(
+                self.env.context,
+                tracking_disable=False,
+                mail_notrack=False,
+                mail_create_nolog=False,
+            )
+        )
+        order = self._create_sale_order()
+        # the creation of the record discards the tracking of the transaction:
+        # run the precommit hooks to start from a clean state, like an order
+        # created in a previous transaction
+        self.env.cr.precommit.run()
+
+        self._register_payment(order)
+        # the tracking values are generated when the transaction is flushed
+        self.env.flush_all()
+        self.env.cr.precommit.run()
+
+        tracked = order.message_ids.tracking_value_ids.filtered(
+            lambda value: value.field_id.name == "paid_amount"
+        )
+        self.assertTrue(tracked)
+        self.assertIn(order.amount_total, tracked.mapped("new_value_float"))
+
+    def test_unallocated_payment(self):
+        """A payment not reconciled with an invoice is reported as unallocated."""
+        order = self._create_sale_order()
+        self.assertFalse(order.has_unallocated_payment)
+        self.assertFalse(order.has_unallocated_refund)
+
+        self._register_payment(order)
+
+        self.assertTrue(order.has_unallocated_payment)
+        self.assertFalse(order.has_unallocated_refund)
+        self.assertIn(
+            order,
+            self.env["sale.order"].search([("has_unallocated_payment", "=", True)]),
+        )
+
+        # the invoice of the order is reconciled with the payment
+        self._invoice_sale_order(order)
+
+        self.assertFalse(order.has_unallocated_payment)
+
+    def test_unallocated_refund(self):
+        """A refund not reconciled with a credit note is reported as
+        unallocated."""
+        order = self._create_sale_order()
+        self.assertFalse(order.has_unallocated_refund)
+
+        self._register_refund(order)
+
+        self.assertTrue(order.has_unallocated_refund)
+        self.assertFalse(order.has_unallocated_payment)
+        self.assertIn(
+            order,
+            self.env["sale.order"].search([("has_unallocated_refund", "=", True)]),
+        )
 
     def test_invoice_reconciled_with_payment(self):
         """The invoice generated from a paid sale order is reconciled with the

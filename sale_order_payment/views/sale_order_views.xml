@@ -21,21 +21,17 @@
                     />
                 </button>
             </xpath>
-            <!--
-                Display the payment information right below the total amount of
-                the order (devis/commande).
-            -->
             <xpath
                 expr="//group[@name='sale_total']/field[@name='tax_totals']"
                 position="after"
             >
                 <div
                     class="d-flex justify-content-end border-top pt-1"
-                    invisible="not payment_line_count or is_paid"
+                    invisible="is_paid or (invoice_ids and not payment_line_count)"
                 >
-                    <span class="o_form_label text-danger">To pay</span>
+                    <span class="o_form_label text-danger">Paid</span>
                     <field
-                        name="amount_due"
+                        name="paid_amount"
                         nolabel="1"
                         widget="monetary"
                         class="fw-bolder text-danger"
@@ -43,7 +39,7 @@
                 </div>
                 <div
                     class="d-flex justify-content-end border-top pt-1"
-                    invisible="not payment_line_count or not is_paid"
+                    invisible="not is_paid or (invoice_ids and not payment_line_count)"
                 >
                     <span class="o_form_label text-success">Paid</span>
                     <field
@@ -54,6 +50,32 @@
                     />
                 </div>
             </xpath>
+        </field>
+    </record>
+
+    <record id="view_sales_order_filter_sale_order_payment" model="ir.ui.view">
+        <field name="name">sale.order.list.select.sale.order.payment</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter" />
+        <field name="arch" type="xml">
+            <filter name="activities_overdue" position="before">
+                <separator />
+                <filter
+                    name="is_paid"
+                    string="Paid"
+                    domain="[('is_paid', '=', True)]"
+                />
+                <filter
+                    name="has_unallocated_payment"
+                    string="Unallocated Payment"
+                    domain="[('has_unallocated_payment', '=', True)]"
+                />
+                <filter
+                    name="has_unallocated_refund"
+                    string="Unallocated Refund"
+                    domain="[('has_unallocated_refund', '=', True)]"
+                />
+            </filter>
         </field>
     </record>
 </odoo>

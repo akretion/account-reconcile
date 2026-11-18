@@ -19,28 +19,49 @@ class SaleOrder(models.Model):
     payment_line_count = fields.Integer(
         string="Payment Entries",
         compute="_compute_payment_info",
+        store=True,
     )
     paid_amount = fields.Monetary(
         compute="_compute_payment_info",
         currency_field="currency_id",
+        store=True,
+        tracking=True,
         help="Total amount of the payment journal items linked to this sale "
         "order (posted or draft entries, cancelled entries excluded).",
     )
     amount_due = fields.Monetary(
         compute="_compute_payment_info",
         currency_field="currency_id",
+        store=True,
         help="Remaining amount to pay on this sale order.",
     )
     is_paid = fields.Boolean(
         string="Paid",
         compute="_compute_payment_info",
+        store=True,
         help="True when the paid amount covers the total amount of the sale order.",
+    )
+    has_unallocated_payment = fields.Boolean(
+        string="Unallocated Payment",
+        compute="_compute_payment_info",
+        store=True,
+        help="True when a customer payment of the sale order is not reconciled "
+        "with an invoice of the order.",
+    )
+    has_unallocated_refund = fields.Boolean(
+        string="Unallocated Refund",
+        compute="_compute_payment_info",
+        store=True,
+        help="True when a refund of the sale order is not reconciled with a "
+        "credit note of the order.",
     )
 
     @api.depends(
         "amount_total",
         "payment_line_ids.debit",
         "payment_line_ids.credit",
+        "payment_line_ids.balance",
+        "payment_line_ids.reconciled",
         "payment_line_ids.move_id.state",
     )
     def _compute_payment_info(self):
@@ -54,6 +75,21 @@ class SaleOrder(models.Model):
             paid_amount = sum(lines.mapped("credit")) - sum(lines.mapped("debit"))
             order.payment_line_count = len(lines)
             order.paid_amount = paid_amount
+            # A customer payment is booked as a credit on the receivable account
+            # and a refund as a debit: a line is allocated once reconciled with
+            # an invoice (payment) or with a credit note (refund).
+            company_rounding = order.company_id.currency_id.rounding
+            unreconciled_lines = lines.filtered(lambda line: not line.reconciled)
+            order.has_unallocated_payment = any(
+                float_compare(line.balance, 0.0, precision_rounding=company_rounding)
+                < 0
+                for line in unreconciled_lines
+            )
+            order.has_unallocated_refund = any(
+                float_compare(line.balance, 0.0, precision_rounding=company_rounding)
+                > 0
+                for line in unreconciled_lines
+            )
             rounding = order.currency_id.rounding
             if (
                 float_compare(
