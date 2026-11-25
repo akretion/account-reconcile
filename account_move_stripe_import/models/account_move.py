@@ -3,9 +3,8 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 from odoo import _, fields, models
-from odoo.addons.account_move_base_import.models.account_move import (
-    ErrorTooManyPartner,
-)
+
+from odoo.addons.account_move_base_import.models.account_move import ErrorTooManyPartner
 
 
 class AccountMoveCompletionRule(models.Model):
@@ -32,7 +31,7 @@ class AccountMoveCompletionRule(models.Model):
         reference = line.name
         if line.name.startswith("REFUND"):
             # Substring between
-            reference = line.name[len("REFUND FOR CHARGE(")+1:-len(")")]
+            reference = line.name[len("REFUND FOR CHARGE(") + 1 : -len(")")]
         sales = so_obj.search([("transaction_ids.reference", "=", reference)])
         partners = sales.mapped("partner_id")
         if len(partners) > 1:
