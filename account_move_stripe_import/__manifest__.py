@@ -5,23 +5,18 @@
 {
     "name": "Account Move Stripe Import",
     "summary": "Import Deposit/Payout details from Stripe",
-    "version": "12.0.1.0.0",
+    "version": "14.0.1.0.0",
     "category": "Finance",
     "website": "https://github.com/OCA/account-reconcile",
     "author": "Akretion,Odoo Community Association (OCA)",
     "license": "AGPL-3",
     "application": False,
     "installable": True,
-    "external_dependencies": {
-        "python": [],
-        "bin": [],
-    },
-    "depends": ["base_transaction_id", "account_move_base_import"],
+    "depends": ["account_move_base_import", "payment_stripe", "sale"],
+    "external_dependencies": {"python": ["stripe"]},
     "data": [
-        "wizards/import_statement_view.xml",
+        "wizards/credit_statement_import_views.xml",
         "data/cron.xml",
         "data/completion_rule_data.xml",
     ],
-    "demo": [],
-    "qweb": [],
 }
