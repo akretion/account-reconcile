@@ -22,7 +22,15 @@ class FakeStripeAccounts:
         self.payouts_by_key = {}
         self.transactions_by_payout = {}
 
-    def add_payout(self, api_key, payout_id, arrival_date, transactions, status="paid"):
+    def add_payout(
+        self,
+        api_key,
+        payout_id,
+        arrival_date,
+        transactions,
+        status="paid",
+        automatic=True,
+    ):
         self.payouts_by_key.setdefault(api_key, []).append(
             {
                 "id": payout_id,
@@ -30,14 +38,13 @@ class FakeStripeAccounts:
                 "created": arrival_date - 2 * 86400,
                 "arrival_date": arrival_date,
                 "status": status,
+                "automatic": automatic,
             }
         )
         self.transactions_by_payout[(api_key, payout_id)] = transactions
 
     def set_payout_status(self, api_key, payout_id, status):
-        for payout in self.payouts_by_key[api_key]:
-            if payout["id"] == payout_id:
-                payout["status"] = status
+        self._find_payout(api_key, payout_id)["status"] = status
 
     def list_payouts(self, api_key=None, **params):
         self._check_api_key(api_key)
@@ -59,8 +66,21 @@ class FakeStripeAccounts:
 
     def list_transactions(self, api_key=None, payout=None, **params):
         self._check_api_key(api_key)
+        if not self._find_payout(api_key, payout)["automatic"]:
+            raise stripe.InvalidRequestError(
+                "Balance transaction history can only be filtered on automatic "
+                "transfers, not manual.",
+                "payout",
+            )
         return self._page(
             self.transactions_by_payout[(api_key, payout)], api_key, params
+        )
+
+    def _find_payout(self, api_key, payout_id):
+        return next(
+            payout
+            for payout in self.payouts_by_key[api_key]
+            if payout["id"] == payout_id
         )
 
     def _check_api_key(self, api_key):
@@ -159,7 +179,13 @@ class StripeImportCommon(PaymentAcquirerCommon):
             self.addCleanup(patcher.stop)
 
     def _add_stripe_payout(
-        self, payout_id, arrival_date, transactions, provider=None, status="paid"
+        self,
+        payout_id,
+        arrival_date,
+        transactions,
+        provider=None,
+        status="paid",
+        automatic=True,
     ):
         self.stripe_accounts.add_payout(
             (provider or self.stripe).stripe_secret_key,
@@ -167,6 +193,7 @@ class StripeImportCommon(PaymentAcquirerCommon):
             arrival_date,
             transactions,
             status=status,
+            automatic=automatic,
         )
 
     def _set_stripe_payout_status(self, payout_id, status, provider=None):
@@ -175,7 +202,7 @@ class StripeImportCommon(PaymentAcquirerCommon):
         )
 
     def _add_simple_stripe_payout(
-        self, payout_id, arrival_date, provider=None, status="paid"
+        self, payout_id, arrival_date, provider=None, status="paid", automatic=True
     ):
         self._add_stripe_payout(
             payout_id,
@@ -195,6 +222,7 @@ class StripeImportCommon(PaymentAcquirerCommon):
             ],
             provider=provider,
             status=status,
+            automatic=automatic,
         )
 
     def _run_stripe_import_cron(self):
