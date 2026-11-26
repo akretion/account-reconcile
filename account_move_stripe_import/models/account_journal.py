@@ -3,10 +3,12 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 import logging
+import re
 from collections import defaultdict
 from datetime import date, datetime, timezone
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 from odoo.addons.account_move_base_import.parser.parser import AccountMoveImportParser
 
@@ -64,7 +66,15 @@ class StripeParser(AccountMoveImportParser):
     def _list_all(self, resource, **params):
         objects = []
         while True:
-            results = resource.list(limit=STRIPE_PAGE_LIMIT, **params)["data"]
+            try:
+                results = resource.list(limit=STRIPE_PAGE_LIMIT, **params)["data"]
+            except stripe.error.StripeError as error:
+                raise UserError(
+                    _(
+                        "Stripe refused the import: %(error)s",
+                        error=error.user_message or str(error),
+                    )
+                ) from error
             if not results:
                 break
             objects += results
@@ -102,8 +112,30 @@ class StripeParser(AccountMoveImportParser):
             resume_arrival_dates.append(max(settled_arrival_dates))
         return min(resume_arrival_dates)
 
+    def _get_api_key(self):
+        acquirer = self._get_account()
+        api_key = acquirer.stripe_secret_key
+        if not api_key:
+            raise UserError(
+                _(
+                    "No Stripe payment acquirer with a secret key for company "
+                    "%(company)s.",
+                    company=self.journal.company_id.name,
+                )
+            )
+        if not re.fullmatch(r"(sk|rk)_\w+", api_key, re.ASCII):
+            raise UserError(
+                _(
+                    "The secret key of Stripe payment acquirer %(acquirer)s must be "
+                    "a secret key (sk_...) or a restricted key (rk_...), "
+                    "without spaces or accents.",
+                    acquirer=acquirer.display_name,
+                )
+            )
+        return api_key
+
     def parse(self, filebuffer):
-        api_key = self._get_account().stripe_secret_key
+        api_key = self._get_api_key()
         for payout in self._get_payout(api_key=api_key):
             if self._skip(payout["id"]):
                 continue
