@@ -8,7 +8,11 @@
                 <field name="need_file" invisible="1" />
                 <field
                     name="last_import_date"
-                    attrs="{'invisible': [('need_file', '=', True)]}"
+                    attrs="{'invisible': ['|', ('need_file', '=', True), ('last_import_date', '=', False)]}"
+                />
+                <field
+                    name="first_import_date"
+                    attrs="{'invisible': ['|', ('need_file', '=', True), ('last_import_date', '!=', False)]}"
                 />
             </field>
             <field name="input_statement" position="attributes">
